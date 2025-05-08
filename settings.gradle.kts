@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "mobile"
+rootProject.name = "JetpackCompose"
 include(":app")
