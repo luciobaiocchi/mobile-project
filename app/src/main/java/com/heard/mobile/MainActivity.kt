@@ -1,4 +1,4 @@
-package com.example.mobile
+package com.heard.mobile
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
