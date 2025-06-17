@@ -1,6 +1,5 @@
-package com.example.mobile.ui.theme
+package com.heard.mobile.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,28 +8,41 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+import com.hear.mobile.ui.theme.EarthBrown
+import com.hear.mobile.ui.theme.EarthBrownDark
+import com.hear.mobile.ui.theme.PineGreen
+import com.hear.mobile.ui.theme.PineGreenDark
+import com.hear.mobile.ui.theme.RockGray
+import com.hear.mobile.ui.theme.RockGrayDark
+import com.hear.mobile.ui.theme.SkyGray
+import com.hear.mobile.ui.theme.SkyGrayDark
+import com.hear.mobile.ui.theme.SnowWhite
+import com.hear.mobile.ui.theme.SnowWhiteDark
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = EarthBrown,
+    onPrimary = SnowWhite,
+    secondary = PineGreen,
+    onSecondary = SnowWhite,
+    background = SnowWhite,
+    onBackground = Color.Black,
+    surface = SkyGray,
+    onSurface = Color.Black,
+    outline = RockGray
+)
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val DarkColorScheme = darkColorScheme(
+    primary = EarthBrownDark,
+    onPrimary = SnowWhiteDark,
+    secondary = PineGreenDark,
+    onSecondary = SnowWhiteDark,
+    background = SkyGrayDark,
+    onBackground = Color.White,
+    surface = RockGrayDark,
+    onSurface = Color.White,
+    outline = RockGrayDark,
 )
 
 @Composable
