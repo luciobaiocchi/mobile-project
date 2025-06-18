@@ -1,4 +1,4 @@
-package com.heard.mobile.ui.screens
+package com.heard.mobile.ui.screens.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

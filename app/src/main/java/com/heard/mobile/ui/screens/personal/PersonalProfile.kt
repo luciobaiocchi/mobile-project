@@ -1,4 +1,4 @@
-package com.heard.mobile.ui.screens
+package com.heard.mobile.ui.screens.personal
 
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.Image

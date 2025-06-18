@@ -1,5 +1,6 @@
-package com.heard.mobile.ui.screens
+package com.heard.mobile.ui.screens.addPath
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,27 +26,42 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.navigation.NavController
 import com.heard.mobile.ui.composables.AppBar
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AddPathScreen(navController: NavController) {
+fun AddPathScreen(
+    navController: NavController,
+    viewModel: AddPathViewModel = koinViewModel(),
+    onSubmit: () -> Unit = {}
+) {
+    val state = viewModel.state.collectAsState().value
+    val actions = viewModel.actions
+
     Scaffold(
-        topBar = { AppBar(navController, title = "Add Travel") },
+        topBar = { AppBar(navController, title = "Add Path") },
         floatingActionButton = {
             FloatingActionButton(
                 containerColor = MaterialTheme.colorScheme.tertiary,
-                onClick = { navController.navigateUp() }
+                onClick = {
+                    if (state.canSubmit) {
+                        onSubmit()
+                        navController.navigateUp()
+                    }
+                }
             ) {
-                Icon(Icons.Outlined.Check, "Add Travel")
+                Icon(Icons.Outlined.Check, contentDescription = "Add Path")
             }
-        },
+        }
     ) { contentPadding ->
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -56,31 +72,33 @@ fun AddPathScreen(navController: NavController) {
                 .fillMaxSize()
         ) {
             OutlinedTextField(
-                value = "",
-                onValueChange = { /*TODO*/ },
+                value = state.destination,
+                onValueChange = actions::setDestination,
                 label = { Text("Destination") },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = { /* TODO: use current location */ }) {
                         Icon(Icons.Outlined.MyLocation, "Current location")
                     }
                 }
             )
             OutlinedTextField(
-                value = "",
-                onValueChange = { /*TODO*/ },
+                value = state.date,
+                onValueChange = actions::setDate,
                 label = { Text("Date") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = "",
-                onValueChange = { /*TODO*/ },
+                value = state.description,
+                onValueChange = actions::setDescription,
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.size(24.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    // TODO: launch camera and set imageUri via actions.setImageUri(...)
+                },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
             ) {
                 Icon(
@@ -92,17 +110,29 @@ fun AddPathScreen(navController: NavController) {
                 Text("Take a picture")
             }
             Spacer(Modifier.size(8.dp))
-            Image(
-                Icons.Outlined.Image,
-                "Travel picture",
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-                modifier = Modifier
-                    .size(128.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(36.dp)
-            )
+            if (state.imageUri != Uri.EMPTY) {
+                AsyncImage(
+                    model = state.imageUri,
+                    contentDescription = "Travel picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                )
+            } else {
+                Image(
+                    Icons.Outlined.Image,
+                    contentDescription = "Placeholder",
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(36.dp)
+                )
+            }
         }
     }
 }

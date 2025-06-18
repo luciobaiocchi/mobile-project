@@ -1,4 +1,4 @@
-package com.heard.mobile.ui.screens
+package com.heard.mobile.ui.screens.pathDetail
 
 import android.content.Intent
 import androidx.compose.foundation.Image

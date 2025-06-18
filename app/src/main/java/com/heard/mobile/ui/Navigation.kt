@@ -5,12 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.heard.mobile.ui.screens.AddPathScreen
-import com.heard.mobile.ui.screens.HomeScreen
-import com.heard.mobile.ui.screens.PathScreen
-import com.heard.mobile.ui.screens.PersonalProfile
-import com.heard.mobile.ui.screens.SettingsScreen
-import com.heard.mobile.ui.screens.PathDetailScreen
+import com.heard.mobile.ui.screens.addPath.AddPathScreen
+import com.heard.mobile.ui.screens.home.HomeScreen
+import com.heard.mobile.ui.screens.path.PathScreen
+import com.heard.mobile.ui.screens.personal.PersonalProfile
+import com.heard.mobile.ui.screens.settings.SettingsScreen
+import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
 import kotlinx.serialization.Serializable
 
 sealed interface HeardRoute {
