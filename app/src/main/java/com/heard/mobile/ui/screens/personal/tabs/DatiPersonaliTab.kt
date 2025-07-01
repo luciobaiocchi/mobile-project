@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.heard.mobile.ui.screens.personal.components.PersonalInfoItem
 import com.heard.mobile.ui.screens.personal.components.PreferenceItem
-import com.heard.mobile.ui.screens.personal.components.SettingItem
+
 import com.heard.mobile.ui.screens.personal.dialogs.EditProfileDialog
 
 @Composable
@@ -33,10 +33,6 @@ fun DatiPersonaliTab() {
 
         item {
             TravelPreferencesCard()
-        }
-
-        item {
-            AccountSettingsCard()
         }
     }
 
@@ -163,58 +159,3 @@ private fun TravelPreferencesCard() {
     }
 }
 
-@Composable
-private fun AccountSettingsCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = "Impostazioni Account",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SettingItem(
-                icon = Icons.Default.Notifications,
-                title = "Notifiche",
-                subtitle = "Ricevi aggiornamenti sui tuoi viaggi",
-                hasSwitch = true,
-                switchState = true,
-                onSwitchChanged = {}
-            )
-
-            SettingItem(
-                icon = Icons.Default.LocationOn,
-                title = "Localizzazione",
-                subtitle = "Permetti il tracciamento GPS",
-                hasSwitch = true,
-                switchState = true,
-                onSwitchChanged = {}
-            )
-
-            SettingItem(
-                icon = Icons.Default.Security,
-                title = "Privacy",
-                subtitle = "Gestisci le tue impostazioni privacy",
-                onClick = {}
-            )
-
-            SettingItem(
-                icon = Icons.Default.Help,
-                title = "Aiuto e Supporto",
-                subtitle = "FAQ e contatta il supporto",
-                onClick = {}
-            )
-        }
-    }
-}
