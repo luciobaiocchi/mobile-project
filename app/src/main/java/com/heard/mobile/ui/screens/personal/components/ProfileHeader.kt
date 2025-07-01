@@ -84,7 +84,7 @@ private fun UserInfo() {
     )
 
     Text(
-        text = "Esploratore Digitale",
+        text = "Corridore",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
     )

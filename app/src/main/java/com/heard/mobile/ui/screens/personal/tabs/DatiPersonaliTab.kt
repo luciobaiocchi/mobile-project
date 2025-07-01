@@ -12,14 +12,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
 import com.heard.mobile.ui.screens.personal.components.PersonalInfoItem
 import com.heard.mobile.ui.screens.personal.components.PreferenceItem
-
 import com.heard.mobile.ui.screens.personal.dialogs.EditProfileDialog
+
+// Data class per i dati utente
+data class UserData(
+    val nome: String = "",
+    val cognome: String = "",
+    val telefono: String = "",
+    val dataNascita: String = "",
+    val cittaNascita: String = ""
+)
 
 @Composable
 fun DatiPersonaliTab() {
     var showEditDialog by remember { mutableStateOf(false) }
+    var userData by remember { mutableStateOf(UserData()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Carica i dati da Firestore all'avvio
+    LaunchedEffect(Unit) {
+        loadUserDataFromFirestore(
+            onSuccess = { data ->
+                userData = data
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error
+                isLoading = false
+            }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -28,7 +55,16 @@ fun DatiPersonaliTab() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            PersonalInfoCard(onEditClick = { showEditDialog = true })
+            if (isLoading) {
+                LoadingCard()
+            } else if (errorMessage != null) {
+                ErrorCard(errorMessage = errorMessage!!)
+            } else {
+                PersonalInfoCard(
+                    userData = userData,
+                    onEditClick = { showEditDialog = true }
+                )
+            }
         }
 
         item {
@@ -39,13 +75,70 @@ fun DatiPersonaliTab() {
     if (showEditDialog) {
         EditProfileDialog(
             onDismiss = { showEditDialog = false },
-            onSave = { showEditDialog = false }
+            onSave = {
+                showEditDialog = false
+                // Ricarica i dati dopo la modifica
+                isLoading = true
+                loadUserDataFromFirestore(
+                    onSuccess = { data ->
+                        userData = data
+                        isLoading = false
+                    },
+                    onError = { error ->
+                        errorMessage = error
+                        isLoading = false
+                    }
+                )
+            }
         )
     }
 }
 
+// Funzione per caricare i dati da Firestore
+private fun loadUserDataFromFirestore(
+    onSuccess: (UserData) -> Unit,
+    onError: (String) -> Unit
+) {
+    val firestore = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser?.uid
+
+    if (currentUser == null) {
+        onError("Utente non autenticato")
+        return
+    }
+
+    firestore.collection("Utenti")
+        .document(currentUser)
+        .get()
+        .addOnSuccessListener { document ->
+            if (document.exists()) {
+                try {
+                    val userData = UserData(
+                        nome = document.getString("Nome") ?: "",
+                        cognome = document.getString("Cognome") ?: "",
+                        telefono = document.getString("Telefono") ?: "",
+                        dataNascita = document.getString("Nascita") ?: "",
+                        cittaNascita = document.getString("LuogoNascita") ?: ""
+                    )
+                    onSuccess(userData)
+                } catch (e: Exception) {
+                    onError("Errore nel parsing dei dati: ${e.message}")
+                }
+            } else {
+                onError("Dati utente non trovati")
+            }
+        }
+        .addOnFailureListener { exception ->
+            onError("Errore nel caricamento: ${exception.message} ${currentUser}")
+        }
+}
+
 @Composable
-private fun PersonalInfoCard(onEditClick: () -> Unit) {
+private fun PersonalInfoCard(
+    userData: UserData,
+    onEditClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -81,32 +174,101 @@ private fun PersonalInfoCard(onEditClick: () -> Unit) {
             PersonalInfoItem(
                 icon = Icons.Default.Person,
                 label = "Nome Completo",
-                value = "Luca Camillo"
-            )
-
-            PersonalInfoItem(
-                icon = Icons.Default.Email,
-                label = "Email",
-                value = "luca.camillo@email.com"
+                value = "${userData.nome} ${userData.cognome}".trim()
             )
 
             PersonalInfoItem(
                 icon = Icons.Default.Phone,
                 label = "Telefono",
-                value = "+39 333 123 4567"
+                value = userData.telefono
             )
 
             PersonalInfoItem(
                 icon = Icons.Default.Cake,
                 label = "Data di Nascita",
-                value = "15 Maggio 1990"
+                value = userData.dataNascita
             )
 
             PersonalInfoItem(
                 icon = Icons.Default.LocationCity,
-                label = "Città",
-                value = "Milano, Italia"
+                label = "Città di Nascita",
+                value = userData.cittaNascita
             )
+        }
+    }
+}
+
+@Composable
+private fun LoadingCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Caricamento dati...",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ErrorCard(errorMessage: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = "Errore",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Errore nel caricamento",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
         }
     }
 }
@@ -158,4 +320,3 @@ private fun TravelPreferencesCard() {
         }
     }
 }
-
