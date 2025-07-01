@@ -15,6 +15,7 @@ import com.heard.mobile.ui.screens.path.PathScreen
 import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
 import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
+import com.heard.mobile.ui.screens.register.RegisterScreen
 import com.heard.mobile.viewmodel.ThemeViewModel
 import kotlinx.serialization.Serializable
 
@@ -26,6 +27,8 @@ sealed interface HeardRoute {
     @Serializable data object Profile : HeardRoute
     @Serializable data object Path : HeardRoute
     @Serializable data object Login : HeardRoute
+    @Serializable data object Register : HeardRoute
+
 
 
 }
@@ -39,12 +42,25 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
         startDestination = if (isUserLoggedIn) HeardRoute.Home else HeardRoute.Login,
     ) {
         composable<HeardRoute.Login> {
+
             LoginScreen(
+                navController = navController,            // <-- passaggio navController
                 onLoginSuccess = {
                     // naviga alla home dopo il login
                     navController.navigate(HeardRoute.Home) {
                         // evita di poter tornare indietro alla login
                         popUpTo(HeardRoute.Login) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable<HeardRoute.Register> {
+            RegisterScreen(
+                navController = navController,
+                onRegisterSuccess = {
+                    // Dopo registrazione vai alla home e resetta stack
+                    navController.navigate(HeardRoute.Home) {
+                        popUpTo(HeardRoute.Register) { inclusive = true }
                     }
                 }
             )

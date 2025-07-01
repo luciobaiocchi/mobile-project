@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,12 +19,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.heard.mobile.ui.HeardRoute
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    auth: FirebaseAuth = FirebaseAuth.getInstance()
+    auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    navController: NavController
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -67,6 +71,14 @@ fun LoginScreen(
             enabled = !loading
         ) {
             Text("Login")
+        }
+        TextButton(
+            onClick = {
+                navController.navigate(HeardRoute.Register)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Non hai un account? Registrati")
         }
     }
 }
