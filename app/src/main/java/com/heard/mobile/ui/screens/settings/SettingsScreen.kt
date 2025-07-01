@@ -79,7 +79,6 @@ fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel
             item {
                 AccountSettingsCard()
             }
-
             item {
                 // Selettore tema
                 Box(modifier = Modifier.fillMaxWidth()) {

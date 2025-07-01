@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                 ThemeOption.SYSTEM -> isSystemInDarkTheme()
             }
 
-            MobileTheme(useDarkTheme = darkTheme) {
+            MobileTheme(useDarkTheme = darkTheme, dynamicColor = false) {
                 val navController = rememberNavController()
                 ApplicationGraph(navController, themeViewModel, authViewModel)
             }
