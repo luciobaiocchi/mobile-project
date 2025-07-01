@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.heard.mobile.ui.screens.addPath.AddPathScreen
 import com.heard.mobile.ui.screens.home.HomeScreen
+import com.heard.mobile.ui.screens.login.LoginScreen
 import com.heard.mobile.ui.screens.path.PathScreen
 import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
@@ -21,6 +22,8 @@ sealed interface HeardRoute {
     @Serializable data object Settings : HeardRoute
     @Serializable data object Profile : HeardRoute
     @Serializable data object Path : HeardRoute
+    @Serializable data object Login : HeardRoute
+
 
 }
 
@@ -28,8 +31,19 @@ sealed interface HeardRoute {
 fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel) {
     NavHost(
         navController = navController,
-        startDestination = HeardRoute.Home,
+        startDestination = HeardRoute.Login,
     ) {
+        composable<HeardRoute.Login> {
+            LoginScreen(
+                onLoginSuccess = {
+                    // naviga alla home dopo il login
+                    navController.navigate(HeardRoute.Home) {
+                        // evita di poter tornare indietro alla login
+                        popUpTo(HeardRoute.Login) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable<HeardRoute.Home> {
             HomeScreen(navController)
         }

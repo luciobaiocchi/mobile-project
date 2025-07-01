@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    //id("com.google.gms.google-services")
+    id("com.google.gms.google-services")
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
 }
@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.datastore.preferences.core.android)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.foundation.layout.android)
     testImplementation(libs.junit)
     annotationProcessor(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.junit)
@@ -85,7 +87,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // FireBase
-    //implementation(platform(libs.firebase.bom))
-    //implementation(libs.firebase.analytics)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
 }
