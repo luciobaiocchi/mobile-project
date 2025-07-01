@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -27,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.heard.mobile.ui.HeardRoute
 import com.heard.mobile.ui.composables.AppBar
 import com.heard.mobile.ui.composables.CustomBottomBar
+import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.viewmodel.ThemeViewModel
 
 enum class ThemeOption(val label: String) {
@@ -38,7 +41,7 @@ enum class ThemeOption(val label: String) {
 }
 
 @Composable
-fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel) {
+fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
     // Stati per i dati personali
     var username by rememberSaveable { mutableStateOf("") }
     var phoneNumber by rememberSaveable { mutableStateOf("") }
@@ -123,6 +126,15 @@ fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel
                         )
                     }
                 }
+            }
+
+            Button(onClick = {
+                authViewModel.logout()
+                navController.navigate(HeardRoute.Login) {
+                    popUpTo(HeardRoute.Home) { inclusive = true }
+                }
+            }) {
+                Text("Logout")
             }
         }
     }

@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.heard.mobile.datastore.ThemeOption
 import com.heard.mobile.ui.ApplicationGraph
+import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.ui.theme.MobileTheme
 import com.heard.mobile.viewmodel.ThemeViewModel
 
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val authViewModel: AuthViewModel by viewModels()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -43,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
             MobileTheme(useDarkTheme = darkTheme) {
                 val navController = rememberNavController()
-                ApplicationGraph(navController, themeViewModel)
+                ApplicationGraph(navController, themeViewModel, authViewModel)
             }
         }
     }

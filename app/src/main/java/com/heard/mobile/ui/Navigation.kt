@@ -1,12 +1,15 @@
 package com.heard.mobile.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.heard.mobile.ui.screens.addPath.AddPathScreen
 import com.heard.mobile.ui.screens.home.HomeScreen
+import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.ui.screens.login.LoginScreen
 import com.heard.mobile.ui.screens.path.PathScreen
 import com.heard.mobile.ui.screens.personal.PersonalProfile
@@ -28,10 +31,12 @@ sealed interface HeardRoute {
 }
 
 @Composable
-fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel) {
+fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
+    val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+
     NavHost(
         navController = navController,
-        startDestination = HeardRoute.Login,
+        startDestination = if (isUserLoggedIn) HeardRoute.Home else HeardRoute.Login,
     ) {
         composable<HeardRoute.Login> {
             LoginScreen(
@@ -55,7 +60,7 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             AddPathScreen(navController)
         }
         composable<HeardRoute.Settings> {
-            SettingsScreen(navController, themeViewModel)
+            SettingsScreen(navController, themeViewModel, authViewModel)
         }
         composable<HeardRoute.Profile> {
             PersonalProfile(navController)
