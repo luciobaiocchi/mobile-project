@@ -11,6 +11,7 @@ import com.heard.mobile.ui.screens.path.PathScreen
 import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
 import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
+import com.heard.mobile.viewmodel.ThemeViewModel
 import kotlinx.serialization.Serializable
 
 sealed interface HeardRoute {
@@ -24,10 +25,10 @@ sealed interface HeardRoute {
 }
 
 @Composable
-fun ApplicationGraph(navController: NavHostController) {
+fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel) {
     NavHost(
         navController = navController,
-        startDestination = HeardRoute.Home
+        startDestination = HeardRoute.Home,
     ) {
         composable<HeardRoute.Home> {
             HomeScreen(navController)
@@ -40,7 +41,7 @@ fun ApplicationGraph(navController: NavHostController) {
             AddPathScreen(navController)
         }
         composable<HeardRoute.Settings> {
-            SettingsScreen(navController)
+            SettingsScreen(navController, themeViewModel)
         }
         composable<HeardRoute.Profile> {
             PersonalProfile(navController)

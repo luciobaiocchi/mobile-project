@@ -1,6 +1,7 @@
 package com.heard.mobile.ui.composables
 
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.DirectionsWalk
@@ -22,8 +23,7 @@ import androidx.navigation.NavController
 @Composable
 fun CustomBottomBar(navController: NavController, active: String) {
     NavigationBar(
-        modifier = Modifier.height(68.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.wrapContentHeight(),
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = NavigationBarDefaults.Elevation,
         windowInsets = NavigationBarDefaults.windowInsets
