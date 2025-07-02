@@ -1,6 +1,8 @@
 package com.heard.mobile.ui.screens.personal
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -28,8 +30,10 @@ fun PersonalProfile(navController: NavController) {
                 .padding(contentPadding)
                 .fillMaxSize()
         ) {
+            // Header fisso - non scrollabile
             ProfileHeader()
 
+            // Tab fisso - non scrollabile
             CustomTabRow(
                 selectedTabIndex = selectedTabIndex,
                 tabItems = tabItems,
@@ -38,10 +42,17 @@ fun PersonalProfile(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (selectedTabIndex) {
-                0 -> AttivitaTab(navController = navController)
-                1 -> StatisticheTab()
-                2 -> DatiPersonaliTab()
+            // Contenuto scrollabile della tab selezionata
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f) // Occupa tutto lo spazio rimanente
+            ) {
+                when (selectedTabIndex) {
+                    0 -> AttivitaTab(navController = navController)
+                    1 -> StatisticheTab()
+                    2 -> DatiPersonaliTab()
+                }
             }
         }
     }

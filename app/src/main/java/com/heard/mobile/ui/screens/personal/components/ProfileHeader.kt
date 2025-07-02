@@ -16,7 +16,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.R
+import com.heard.mobile.ui.screens.personal.tabs.UserData
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun ProfileHeader() {
@@ -88,6 +93,44 @@ private fun UserInfo() {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
     )
+}
+
+// Funzione per caricare i dati da Firestore
+private fun loadUserDataFromFirestore(
+    onSuccess: (UserData) -> Unit,
+    onError: (String) -> Unit
+) {
+    val firestore = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser?.uid
+
+    if (currentUser == null) {
+        onError("Utente non autenticato")
+        return
+    }
+
+    firestore.collection("Utenti")
+        .document(currentUser)
+        .get()
+        .addOnSuccessListener { document ->
+            if (document.exists()) {
+                try {
+                    val userData = UserData(
+                        nome = document.getString("Nome") ?: "",
+                        cognome = document.getString("Cognome") ?: "",
+                        badge = document.getString("Badge") ?: "",
+                    )
+                    onSuccess(userData)
+                } catch (e: Exception) {
+                    onError("Errore nel parsing dei dati: ${e.message}")
+                }
+            } else {
+                onError("Dati utente non trovati")
+            }
+        }
+        .addOnFailureListener { exception ->
+            onError("Errore nel caricamento: ${exception.message} ${currentUser}")
+        }
 }
 
 @Composable

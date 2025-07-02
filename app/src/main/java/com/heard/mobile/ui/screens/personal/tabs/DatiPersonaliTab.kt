@@ -17,9 +17,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.heard.mobile.ui.screens.personal.components.PersonalInfoItem
 import com.heard.mobile.ui.screens.personal.components.PreferenceItem
 import com.heard.mobile.ui.screens.personal.dialogs.EditProfileDialog
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 // Data class per i dati utente
 data class UserData(
+    val badge: String = "",
     val nome: String = "",
     val cognome: String = "",
     val telefono: String = "",
@@ -74,25 +77,53 @@ fun DatiPersonaliTab() {
 
     if (showEditDialog) {
         EditProfileDialog(
+            currentData = userData,
             onDismiss = { showEditDialog = false },
-            onSave = {
-                showEditDialog = false
-                // Ricarica i dati dopo la modifica
-                isLoading = true
-                loadUserDataFromFirestore(
-                    onSuccess = { data ->
-                        userData = data
-                        isLoading = false
+            onSave = { updatedData ->
+                saveUserDataToFirestore(
+                    updatedData,
+                    onSuccess = {
+                        userData = updatedData
+                        showEditDialog = false
                     },
-                    onError = { error ->
-                        errorMessage = error
-                        isLoading = false
+                    onError = {
+                        showEditDialog = false
                     }
                 )
             }
         )
     }
 }
+
+private fun saveUserDataToFirestore(
+    data: UserData,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val firestore = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser?.uid
+
+    if (currentUser == null) {
+        onError("Utente non autenticato")
+        return
+    }
+
+    val userMap = mapOf(
+        "Badge" to data.badge,
+        "Nome" to data.nome,
+        "Cognome" to data.cognome,
+        "Telefono" to data.telefono,
+        "LuogoNascita" to data.cittaNascita
+    )
+
+    firestore.collection("Utenti")
+        .document(currentUser)
+        .update(userMap)
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onError(e.message ?: "Errore sconosciuto") }
+}
+
 
 // Funzione per caricare i dati da Firestore
 private fun loadUserDataFromFirestore(
@@ -118,8 +149,10 @@ private fun loadUserDataFromFirestore(
                         nome = document.getString("Nome") ?: "",
                         cognome = document.getString("Cognome") ?: "",
                         telefono = document.getString("Telefono") ?: "",
-                        dataNascita = document.getString("Nascita") ?: "",
-                        cittaNascita = document.getString("LuogoNascita") ?: ""
+                        cittaNascita = document.getString("LuogoNascita") ?: "",
+                        dataNascita = document.getTimestamp("Nascita")?.toDate()?.let {
+                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)
+                        } ?: ""
                     )
                     onSuccess(userData)
                 } catch (e: Exception) {
