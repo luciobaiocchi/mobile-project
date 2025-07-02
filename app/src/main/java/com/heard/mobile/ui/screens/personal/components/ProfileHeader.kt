@@ -7,6 +7,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +26,8 @@ import com.heard.mobile.R
 import com.heard.mobile.ui.screens.personal.tabs.UserData
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun ProfileHeader() {
@@ -81,18 +87,46 @@ private fun ProfileImage() {
 
 @Composable
 private fun UserInfo() {
-    Text(
-        text = "Luca Camillo",
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground
-    )
+    var userData by remember { mutableStateOf<UserData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    Text(
-        text = "Corridore",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-    )
+    LaunchedEffect(Unit) {
+        loadUserDataFromFirestore(
+            onSuccess = { data ->
+                userData = data
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error
+                isLoading = false
+            }
+        )
+    }
+
+    if (isLoading) {
+        CircularProgressIndicator()
+    } else if (errorMessage != null) {
+        Text(
+            text = errorMessage ?: "Errore sconosciuto",
+            color = MaterialTheme.colorScheme.error
+        )
+    } else {
+        userData?.let { user ->
+            Text(
+                text = "${user.nome} ${user.cognome}",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Text(
+                text = user.badge.ifEmpty { "Nessun badge" },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }
+    }
 }
 
 // Funzione per caricare i dati da Firestore
