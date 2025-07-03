@@ -3,6 +3,7 @@ package com.heard.mobile.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +17,7 @@ import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
 import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
 import com.heard.mobile.ui.screens.register.RegisterScreen
+import com.heard.mobile.viewmodel.SettingsViewModel
 import com.heard.mobile.viewmodel.ThemeViewModel
 import kotlinx.serialization.Serializable
 
@@ -36,6 +38,7 @@ sealed interface HeardRoute {
 @Composable
 fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+    val settingsViewModel: SettingsViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -44,11 +47,9 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
         composable<HeardRoute.Login> {
 
             LoginScreen(
-                navController = navController,            // <-- passaggio navController
+                navController = navController,
                 onLoginSuccess = {
-                    // naviga alla home dopo il login
                     navController.navigate(HeardRoute.Home) {
-                        // evita di poter tornare indietro alla login
                         popUpTo(HeardRoute.Login) { inclusive = true }
                     }
                 }
@@ -58,7 +59,6 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
-                    // Dopo registrazione vai alla home e resetta stack
                     navController.navigate(HeardRoute.Home) {
                         popUpTo(HeardRoute.Register) { inclusive = true }
                     }
@@ -76,7 +76,7 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             AddPathScreen(navController)
         }
         composable<HeardRoute.Settings> {
-            SettingsScreen(navController, themeViewModel, authViewModel)
+            SettingsScreen(navController, themeViewModel, authViewModel, settingsViewModel)
         }
         composable<HeardRoute.Profile> {
             PersonalProfile(navController)

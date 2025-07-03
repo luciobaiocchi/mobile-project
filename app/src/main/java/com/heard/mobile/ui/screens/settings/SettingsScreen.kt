@@ -1,41 +1,18 @@
 package com.heard.mobile.ui.screens.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.Manifest
+import android.os.Build
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -45,24 +22,52 @@ import com.heard.mobile.ui.composables.CustomBottomBar
 import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.viewmodel.ThemeViewModel
 import com.heard.mobile.ui.screens.personal.components.SettingItem
-
-enum class ThemeOption(val label: String) {
-    LIGHT("Chiaro"),
-    DARK("Scuro"),
-    SYSTEM("Sistema")
-}
+import com.heard.mobile.datastore.ThemeOption
+import com.heard.mobile.utils.rememberMultiplePermissions
+import com.heard.mobile.utils.PermissionStatus
+import com.heard.mobile.viewmodel.SettingsViewModel
 
 @Composable
-fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
-    // Stati per i dati personali
-    var username by rememberSaveable { mutableStateOf("") }
-    var phoneNumber by rememberSaveable { mutableStateOf("") }
-    var height by rememberSaveable { mutableStateOf("") }
-    var weight by rememberSaveable { mutableStateOf("") }
+fun SettingsScreen(
+    navController: NavController,
+    themeViewModel: ThemeViewModel,
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel
+) {
+    val context = LocalContext.current
+    val theme by themeViewModel.theme.collectAsState()
+    val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
+    val locationEnabled by settingsViewModel.locationEnabled.collectAsState()
 
-    // Stato per il tema
-    var expanded by remember { mutableStateOf(false) }
-    var selectedTheme by rememberSaveable { mutableStateOf(ThemeOption.SYSTEM) }
+    val permissions = buildList {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
+    val permissionHandler = rememberMultiplePermissions(
+        permissions = permissions,
+        onResult = { results ->
+            val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                results[Manifest.permission.POST_NOTIFICATIONS]?.isGranted == true
+            } else {
+                true // Pre-Android 13 non richiede permesso runtime per notifiche
+            }
+
+            val hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
+                    results[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
+
+            // Aggiorna le preferenze solo se i permessi sono stati concessi
+            if (hasNotificationPermission && !notificationsEnabled) {
+                settingsViewModel.setNotificationsEnabled(true)
+            }
+            if (hasLocationPermission && !locationEnabled) {
+                settingsViewModel.setLocationEnabled(true)
+            }
+        }
+    )
 
     Scaffold(
         topBar = { AppBar(navController, title = "Impostazioni") },
@@ -77,39 +82,14 @@ fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                AccountSettingsCard()
-            }
-            item {
-                // Selettore tema
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = selectedTheme.label,
-                        onValueChange = {},
-                        label = { Text("Tema") },
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { expanded = !expanded }) {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Espandi tema")
-                            }
-                        }
-                    )
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        ThemeOption.values().forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option.label) },
-                                onClick = {
-                                    expanded = false
-                                    themeViewModel.setTheme(option)
-                                }
-                            )
-                        }
-                    }
-                }
+                AccountSettingsCard(
+                    themeViewModel = themeViewModel,
+                    settingsViewModel = settingsViewModel,
+                    currentTheme = theme,
+                    notificationsEnabled = notificationsEnabled,
+                    locationEnabled = locationEnabled,
+                    permissionHandler = permissionHandler
+                )
             }
 
             item {
@@ -127,18 +107,24 @@ fun SettingsScreen(navController: NavController , themeViewModel: ThemeViewModel
             }
         }
     }
-
 }
 
 @Composable
-private fun AccountSettingsCard() {
+private fun AccountSettingsCard(
+    themeViewModel: ThemeViewModel,
+    settingsViewModel: SettingsViewModel,
+    currentTheme: ThemeOption,
+    notificationsEnabled: Boolean,
+    locationEnabled: Boolean,
+    permissionHandler: com.heard.mobile.utils.MultiplePermissionHandler
+) {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -156,8 +142,25 @@ private fun AccountSettingsCard() {
                 title = "Notifiche",
                 subtitle = "Ricevi aggiornamenti sui tuoi viaggi",
                 hasSwitch = true,
-                switchState = true,
-                onSwitchChanged = {}
+                switchState = notificationsEnabled,
+                onSwitchChanged = { enabled ->
+                    if (enabled) {
+                        // Se si vuole abilitare, controlla i permessi
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val notificationPermission = permissionHandler.statuses[Manifest.permission.POST_NOTIFICATIONS]
+                            if (notificationPermission?.isGranted != true) {
+                                permissionHandler.launchPermissionRequest()
+                            } else {
+                                settingsViewModel.setNotificationsEnabled(true)
+                            }
+                        } else {
+                            settingsViewModel.setNotificationsEnabled(true)
+                        }
+                    } else {
+                        // Se si vuole disabilitare, aggiorna direttamente
+                        settingsViewModel.setNotificationsEnabled(false)
+                    }
+                }
             )
 
             SettingItem(
@@ -165,8 +168,23 @@ private fun AccountSettingsCard() {
                 title = "Localizzazione",
                 subtitle = "Permetti il tracciamento GPS",
                 hasSwitch = true,
-                switchState = true,
-                onSwitchChanged = {}
+                switchState = locationEnabled,
+                onSwitchChanged = { enabled ->
+                    if (enabled) {
+                        // Se si vuole abilitare, controlla i permessi
+                        val hasLocationPermission = permissionHandler.statuses[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
+                                permissionHandler.statuses[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
+
+                        if (!hasLocationPermission) {
+                            permissionHandler.launchPermissionRequest()
+                        } else {
+                            settingsViewModel.setLocationEnabled(true)
+                        }
+                    } else {
+                        // Se si vuole disabilitare, aggiorna direttamente
+                        settingsViewModel.setLocationEnabled(false)
+                    }
+                }
             )
 
             SettingItem(
@@ -182,6 +200,38 @@ private fun AccountSettingsCard() {
                 subtitle = "FAQ e contatta il supporto",
                 onClick = {}
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = currentTheme.label,
+                    onValueChange = { _: String -> },
+                    label = { Text("Tema") },
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = !expanded }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Espandi tema")
+                        }
+                    }
+                )
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    ThemeOption.values().forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.label) },
+                            onClick = {
+                                expanded = false
+                                themeViewModel.setTheme(option)
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
