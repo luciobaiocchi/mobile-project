@@ -110,7 +110,6 @@ private fun saveUserDataToFirestore(
     }
 
     val userMap = mapOf(
-        "Badge" to data.badge,
         "Nome" to data.nome,
         "Cognome" to data.cognome,
         "Telefono" to data.telefono,

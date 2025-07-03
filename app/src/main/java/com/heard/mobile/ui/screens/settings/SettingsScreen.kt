@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -88,22 +89,14 @@ fun SettingsScreen(
                     currentTheme = theme,
                     notificationsEnabled = notificationsEnabled,
                     locationEnabled = locationEnabled,
-                    permissionHandler = permissionHandler
+                    permissionHandler = permissionHandler,
+                    authViewModel = authViewModel,
+                    navController = navController
                 )
             }
 
             item {
-                Button(
-                    onClick = {
-                        authViewModel.logout()
-                        navController.navigate(HeardRoute.Login) {
-                            popUpTo(HeardRoute.Home) { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Logout")
-                }
+
             }
         }
     }
@@ -116,7 +109,9 @@ private fun AccountSettingsCard(
     currentTheme: ThemeOption,
     notificationsEnabled: Boolean,
     locationEnabled: Boolean,
-    permissionHandler: com.heard.mobile.utils.MultiplePermissionHandler
+    permissionHandler: com.heard.mobile.utils.MultiplePermissionHandler,
+    authViewModel: AuthViewModel,
+    navController: NavController
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -231,6 +226,18 @@ private fun AccountSettingsCard(
                         )
                     }
                 }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    authViewModel.logout()
+                    navController.navigate(HeardRoute.Login) {
+                        popUpTo(HeardRoute.Home) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Logout")
             }
         }
     }

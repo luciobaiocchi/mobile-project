@@ -18,11 +18,9 @@ fun EditProfileDialog(
     onDismiss: () -> Unit,
     onSave: (UserData) -> Unit
 ) {
-    var badge by remember { mutableStateOf(currentData.badge) }
     var nome by remember { mutableStateOf(currentData.nome) }
     var cognome by remember { mutableStateOf(currentData.cognome) }
     var telefono by remember { mutableStateOf(currentData.telefono) }
-    var nascita by remember { mutableStateOf(currentData.dataNascita) }
     var luogoNascita by remember { mutableStateOf(currentData.cittaNascita) }
 
     AlertDialog(
@@ -80,7 +78,6 @@ fun EditProfileDialog(
                 onClick = {
 
                     val updatedData = UserData(
-                        badge = badge,
                         cognome = cognome,
                         cittaNascita = luogoNascita,
                         nome = nome,

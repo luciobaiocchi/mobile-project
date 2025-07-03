@@ -1,5 +1,6 @@
 package com.heard.mobile.ui.screens.personal.components
 
+import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -101,46 +102,58 @@ fun SettingItem(
     subtitle: String,
     hasSwitch: Boolean = false,
     switchState: Boolean = false,
-    onSwitchChanged: ((Boolean) -> Unit)? = null,
-    onClick: (() -> Unit)? = null
+    onSwitchChanged: (Boolean) -> Unit = {},
+    onClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(vertical = 12.dp),
+            .clickable {
+                if (hasSwitch) {
+                    onSwitchChanged(!switchState)
+                } else {
+                    onClick()
+                }
+            }
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = title,
-            tint = MaterialTheme.colorScheme.primary,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
             modifier = Modifier.size(24.dp)
         )
+
         Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        if (hasSwitch && onSwitchChanged != null) {
+
+        if (hasSwitch) {
             Switch(
                 checked = switchState,
-                onCheckedChange = onSwitchChanged
-            )
-        } else if (onClick != null) {
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Vai a",
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                onCheckedChange = onSwitchChanged,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.secondary,
+                    checkedTrackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.primary,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    checkedBorderColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                )
             )
         }
     }

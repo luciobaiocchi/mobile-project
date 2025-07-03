@@ -1,5 +1,6 @@
 package com.heard.mobile.ui.screens.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,10 +40,12 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(backgroundColor)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {

@@ -1,5 +1,6 @@
 package com.heard.mobile.ui.screens.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -9,7 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 import com.heard.mobile.ui.HeardRoute
 import java.util.regex.Pattern
 
@@ -24,6 +28,7 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     fun isValidEmail(email: String): Boolean {
         val emailPattern = Pattern.compile("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+")
@@ -35,6 +40,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(backgroundColor)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -120,7 +126,38 @@ fun RegisterScreen(
                             .addOnCompleteListener { task ->
                                 loading = false
                                 if (task.isSuccessful) {
-                                    onRegisterSuccess()
+                                    // Registrazione ok, creiamo utente Firestore
+                                    val user = auth.currentUser
+                                    if (user != null) {
+                                        val uid = user.uid
+                                        val db = Firebase.firestore
+
+                                        val userData = hashMapOf(
+                                            "nome" to "",
+                                            "cognome" to "",
+                                            "email" to email.trim(),
+                                            "Badge" to "Novizio",
+                                        )
+
+
+                                        val firestore = FirebaseFirestore.getInstance()
+
+                                        user?.let {
+                                            db.collection("Utenti").document(it.uid)
+                                                .set(userData)
+                                                .addOnSuccessListener {
+                                                    onRegisterSuccess()
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    error = "Errore durante la creazione del profilo utente: ${e.localizedMessage}"
+                                                }
+                                        } ?: run {
+                                            error = "Utente non trovato dopo la registrazione"
+                                        }
+
+                                    } else {
+                                        error = "Errore: utente non trovato dopo la registrazione"
+                                    }
                                 } else {
                                     error = task.exception?.localizedMessage ?: "Errore durante la registrazione"
                                 }
