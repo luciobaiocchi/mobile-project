@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.firebase.firestore.ktx)
     testImplementation(libs.junit)
     annotationProcessor(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.junit)

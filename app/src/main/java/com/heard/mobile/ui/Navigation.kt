@@ -29,13 +29,12 @@ sealed interface HeardRoute {
     @Serializable data object Login : HeardRoute
     @Serializable data object Register : HeardRoute
 
-
-
 }
 
 @Composable
 fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+    val userEmail by authViewModel.userEmail.collectAsState()
 
     NavHost(
         navController = navController,
