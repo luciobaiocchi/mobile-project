@@ -44,15 +44,15 @@ import java.util.Locale
 
 
 data class UserProfile(
-    val nome: String = "",
-    val cognome: String = "",
-    val preferiti: List<DocumentReference>? = null, // Assumiamo sia qui per semplicità
-    val badge: String = ""
+    val Nome: String = "",
+    val Cognome: String = "",
+    val preferiti: List<DocumentReference>? = null,
+    val Badge: String = ""
 )
 
 data class PathData(
-    val Nome: String = "", // Nome del percorso
-    val Data: Timestamp? = null, // Data dell'attività
+    val Nome: String = "",
+    val Data: Timestamp? = null,
     val Descrizione: String = "",
     val Durata: Int? = null,
     val PassoMedio: Float? = null,
@@ -81,7 +81,8 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var placeholderView: ImageView? by remember { mutableStateOf(null) }
 
     LaunchedEffect(Unit) {
-        Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        Configuration.getInstance()
+            .load(ctx, ctx.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
 
         // 1. Recupera i dati specifici del percorso
         val pathDoc = db.collection("Percorsi").document(travelId).get().await()
@@ -150,12 +151,13 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                                 scope.launch {
                                     toggleFavorite(db, travelId, userFavorites) { updatedList ->
                                         // Aggiorna la lista dei preferiti nel profilo dell'utente LOGGATO
-                                        userProfileCurrentViewer = userProfileCurrentViewer?.copy(preferiti = updatedList)
+                                        userProfileCurrentViewer =
+                                            userProfileCurrentViewer?.copy(preferiti = updatedList)
                                     }
                                 }
                             },
                             leadingIcon = {
-                                if( userFavorites.any{ it.id == travelId } ) {
+                                if (userFavorites.any { it.id == travelId }) {
                                     Icon(Icons.Outlined.Favorite, contentDescription = null)
                                 } else {
                                     Icon(Icons.Outlined.FavoriteBorder, contentDescription = null)
@@ -199,37 +201,39 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     .height(300.dp)
                     .fillMaxWidth()
             ) {
-                AndroidView(factory = { context ->
-                    val container = FrameLayout(context).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                    }
+                AndroidView(
+                    factory = { context ->
+                        val container = FrameLayout(context).apply {
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                        }
 
-                    val map = MapView(context)
-                    val image = ImageView(context).apply {
-                        layoutParams = FrameLayout.LayoutParams(
+                        val map = MapView(context)
+                        val image = ImageView(context).apply {
+                            layoutParams = FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                            )
+                            scaleType = ImageView.ScaleType.CENTER_INSIDE
+                        }
+
+                        map.layoutParams = FrameLayout.LayoutParams(
                             FrameLayout.LayoutParams.MATCH_PARENT,
                             FrameLayout.LayoutParams.MATCH_PARENT
                         )
-                        scaleType = ImageView.ScaleType.CENTER_INSIDE
-                    }
 
-                    map.layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT
-                    )
+                        container.addView(map)
+                        container.addView(image)
 
-                    container.addView(map)
-                    container.addView(image)
+                        mapView = map
+                        placeholderView = image
 
-                    mapView = map
-                    placeholderView = image
-
-                    container
-                },
-                    modifier = Modifier.fillMaxSize())
+                        container
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 Box(
                     modifier = Modifier
@@ -279,7 +283,8 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         // User Info (Popolato con i dati dell'utente CREATORE del percorso)
-                        val creatorUserName = "${userProfileForCreator?.nome ?: ""} ${userProfileForCreator?.cognome ?: ""}".trim()
+                        val creatorUserName =
+                            "${userProfileForCreator?.Nome ?: ""} ${userProfileForCreator?.Cognome ?: ""}".trim()
                         val activityTimestamp = pathData?.Data
                         val activityDateFormatted = activityTimestamp?.toDate()?.let {
                             // Formatta la data (es. "10 maggio")
@@ -295,10 +300,12 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         UserInfo(
-                            userName = creatorUserName, // Usa il nome del creatore
+                            userName = creatorUserName,
                             activityDate = activityDateFormatted,
                             activityTime = activityTimeFormatted
                         )
+
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         // Distanza (dal pathData)
                         Text(
@@ -308,7 +315,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                             fontSize = 48.sp,
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
-
 
 
                         // Statistiche Attività (dal pathData)
@@ -324,6 +330,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 1 -> { // Statistiche (se hai un composable dedicato)
                     Text("Contenuto delle statistiche qui.")
                 }
+
                 2 -> { // Mappa (già gestita sopra per la descrizione)
                     ExpandableText(pathData?.Descrizione.orEmpty())
                 }
@@ -339,18 +346,19 @@ fun ExpandableText(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier
-        .padding(5.dp)
-        .border(
-            width = 2.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-            shape = RoundedCornerShape(12.dp)
-        )
-        .background(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(12.dp)
-        )
-        .padding(16.dp)
+    Column(
+        modifier = Modifier
+            .padding(5.dp)
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
     ) {
         Text(
             text = text,
@@ -380,11 +388,18 @@ fun UserInfo(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 2.dp,
+                color = Color(0xFF3F51B5),
+                shape = RoundedCornerShape(25.dp)
+            )
+            .padding(12.dp)
     ) {
         Card(
             shape = CircleShape,
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFC5CAE9)), // Un colore simile al lilla/blu tenue dell'immagine
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFC5CAE9)),
             modifier = Modifier.size(40.dp)
         ) {
             Box(
@@ -399,6 +414,9 @@ fun UserInfo(
                 )
             }
         }
+
+
+
 
         Spacer(modifier = Modifier.width(16.dp))
 
