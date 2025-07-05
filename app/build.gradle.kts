@@ -77,6 +77,9 @@ dependencies {
     implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.androidx.animation.core.android)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
     testImplementation(libs.junit)
     annotationProcessor(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.junit)
@@ -90,5 +93,15 @@ dependencies {
     // FireBase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+
+    // OSM
+    implementation(libs.osmdroid.android)
+
+    implementation(libs.kotlinx.coroutines.android)
+
+
+
+
+
 
 }
