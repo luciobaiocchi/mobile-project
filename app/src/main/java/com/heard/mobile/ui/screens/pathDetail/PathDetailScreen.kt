@@ -60,6 +60,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.R
 import com.heard.mobile.ui.HeardRoute
 import com.heard.mobile.ui.composables.AppBar
+import com.heard.mobile.ui.screens.path.PathItem
 import com.heard.mobile.ui.screens.personal.CustomTabRow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -121,7 +122,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var mapView: MapView? by remember { mutableStateOf(null) }
     var placeholderView: ImageView? by remember { mutableStateOf(null) }
 
-    var paths: List<Pair<String, String>> = emptyList()
+    var paths by remember { mutableStateOf<List<Triple<String, String, String?>>>(emptyList()) }
 
     // Launcher per selezionare l'immagine
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -519,8 +520,9 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         modifier = Modifier.padding(contentPadding)
                     ) {
                         items(paths) { path ->
-                            com.heard.mobile.ui.screens.path.PathItem(
+                            PathItem(
                                 item = path.second,
+                                fileName = path.third,
                                 onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
                             )
                         }

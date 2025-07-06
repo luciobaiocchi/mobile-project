@@ -1,5 +1,6 @@
 package com.heard.mobile.ui.screens.path
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -8,12 +9,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Image
@@ -53,10 +56,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import java.io.File
 
 @Composable
 fun PathScreen(navController: NavController) {
-    var paths by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var paths by remember { mutableStateOf<List<Triple<String, String, String?>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val db = FirebaseFirestore.getInstance()
 
@@ -101,34 +107,48 @@ fun PathScreen(navController: NavController) {
                 items(paths) { path ->
                     PathItem(
                         item = path.second,
+                        fileName = path.third,
                         onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
                     )
                 }
+
             }
         }
     }
 }
 
 
-suspend fun getPathsName(db: FirebaseFirestore): List<Pair<String, String>> {
+suspend fun getPathsName(db: FirebaseFirestore): List<Triple<String, String, String?>> {
     val paths = db.collection("Percorsi").get().await()
     return paths.documents.mapNotNull { doc ->
         val name = doc.getString("Nome")
+        val file = doc.getString("file")
         val id = doc.id
-        if (name != null) Pair(id, name) else null
+        if (name != null) Triple(id, name, file) else null
     }
 }
 
 
+
 @Composable
-fun PathItem(item: String, onClick: () -> Unit) {
+fun PathItem(item: String, fileName: String?, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val imageBitmap = remember(fileName) {
+        fileName?.let {
+            val file = File(context.filesDir, it)
+            if (file.exists()) {
+                BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+            } else null
+        }
+    }
+
     Card(
         onClick = onClick,
         modifier = Modifier
             .size(150.dp)
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor =  MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -138,17 +158,29 @@ fun PathItem(item: String, onClick: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                Icons.Outlined.Image,
-                "Foto percorso",
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(20.dp)
-            )
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Immagine percorso",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .height(72.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Image,
+                    contentDescription = "Icona placeholder",
+                    modifier = Modifier
+                        .height(72.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(20.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            }
+
             Spacer(Modifier.size(8.dp))
             Text(
                 item,
@@ -159,3 +191,4 @@ fun PathItem(item: String, onClick: () -> Unit) {
         }
     }
 }
+
