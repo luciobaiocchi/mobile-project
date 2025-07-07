@@ -85,7 +85,7 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             PathScreen(navController)
         }
         composable<HeardRoute.Group> {
-            CompleteGroupScreen(navController)
+            GroupScreen(navController)
         }
     }
 }
