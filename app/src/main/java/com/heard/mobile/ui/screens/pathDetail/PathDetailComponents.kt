@@ -29,6 +29,118 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
+fun ImageBox(
+    imageBitmap: Bitmap?,
+    isImageLoading: Boolean,
+    isUploadingImage: Boolean,
+    onImageClick: () -> Unit,
+    onRemoveImage: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable {
+                if (imageBitmap == null && !isImageLoading && !isUploadingImage) {
+                    onImageClick()
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            isUploadingImage -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Caricamento in corso...")
+                }
+            }
+            isImageLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            imageBitmap != null -> {
+                Image(
+                    bitmap = imageBitmap.asImageBitmap(),
+                    contentDescription = "Immagine del percorso",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FloatingActionButton(
+                            onClick = onImageClick,
+                            modifier = Modifier.size(40.dp),
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ) {
+                            Icon(
+                                Icons.Outlined.CameraAlt,
+                                contentDescription = "Cambia immagine",
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.White
+                            )
+                        }
+
+                        FloatingActionButton(
+                            onClick = onRemoveImage,
+                            modifier = Modifier.size(40.dp),
+                            containerColor = MaterialTheme.colorScheme.error
+                        ) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_delete),
+                                contentDescription = "Rimuovi immagine",
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+            else -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.Image,
+                        contentDescription = "Aggiungi immagine",
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Tocca per aggiungere un'immagine",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ExpandableTextWithImage(
     text: String,
     minimizedMaxLines: Int = 3,
@@ -74,107 +186,13 @@ fun ExpandableTextWithImage(
                 .padding(bottom = 8.dp)
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable {
-                    if (imageBitmap == null && !isImageLoading && !isUploadingImage) {
-                        onImageClick()
-                    }
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            when {
-                isUploadingImage -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Caricamento in corso...")
-                    }
-                }
-                isImageLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                imageBitmap != null -> {
-                    Image(
-                        bitmap = imageBitmap.asImageBitmap(),
-                        contentDescription = "Immagine del percorso",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FloatingActionButton(
-                                onClick = onImageClick,
-                                modifier = Modifier.size(40.dp),
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ) {
-                                Icon(
-                                    Icons.Outlined.CameraAlt,
-                                    contentDescription = "Cambia immagine",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = Color.White
-                                )
-                            }
-
-                            FloatingActionButton(
-                                onClick = onRemoveImage,
-                                modifier = Modifier.size(40.dp),
-                                containerColor = MaterialTheme.colorScheme.error
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = android.R.drawable.ic_menu_delete),
-                                    contentDescription = "Rimuovi immagine",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = Color.White
-                                )
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.Image,
-                            contentDescription = "Aggiungi immagine",
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Tocca per aggiungere un'immagine",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
+        ImageBox(
+            imageBitmap = imageBitmap,
+            isImageLoading = isImageLoading,
+            isUploadingImage = isUploadingImage,
+            onImageClick = onImageClick,
+            onRemoveImage = onRemoveImage
+        )
     }
 }
 
@@ -272,10 +290,10 @@ fun UserInfo(
 
 @Composable
 fun ActivityStats(
-    totalDurationMin: String,
-    averagePace: String,
-    averageHeartRateBpm: String,
-    totalCaloriesKcal: String
+    totalDurationMin: String? = "N/A",
+    averagePace: String? = "N/A",
+    averageHeartRateBpm: String? = "N/A",
+    totalCaloriesKcal: String? = "N/A"
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -288,7 +306,9 @@ fun ActivityStats(
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            StatItem(label = "Passo medio", value = averagePace)
+            if (averagePace != null) {
+                StatItem(label = "Passo medio", value = averagePace)
+            }
             Spacer(modifier = Modifier.height(16.dp))
             StatItem(label = "Calorie totali", value = "$totalCaloriesKcal kcal")
         }

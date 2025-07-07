@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.view.ViewGroup
@@ -13,66 +12,49 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.heard.mobile.R
-import com.heard.mobile.ui.HeardRoute
 import com.heard.mobile.ui.composables.AppBar
-import com.heard.mobile.ui.screens.path.PathItem
 import com.heard.mobile.ui.screens.personal.CustomTabRow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.osmdroid.config.Configuration
 import org.osmdroid.views.MapView
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.UUID
 
 
 data class UserProfile(
@@ -86,11 +68,11 @@ data class PathData(
     val Nome: String = "",
     val Data: Timestamp? = null,
     val Descrizione: String = "",
-    val Durata: Int? = null,
-    val PassoMedio: Float? = null,
-    val BattitiMedi: Int? = null,
-    val Calorie: Int? = null,
-    val Lunghezza: Int? = null,
+    val Durata: String? = null,
+    val PassoMedio: String? = null,
+    val BattitiMedi: String? = null,
+    val Calorie: String? = null,
+    val Lunghezza: String? = null,
     val Creatore: DocumentReference? = null,
     val file: String = "" // Campo per il nome del file immagine
 )
@@ -348,7 +330,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         }
     }
 
-    // Qui estraiamo userFavorites dal profilo dell'utente LOGGATO per renderlo reattivo
     val userFavorites = userProfileCurrentViewer?.preferiti ?: emptyList()
 
     fun shareDetails() {
@@ -492,10 +473,10 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
 
                         // Statistiche Attività (dal pathData)
                         ActivityStats(
-                            totalDurationMin = pathData?.Durata.toString(),
-                            averagePace = pathData?.PassoMedio.toString(),
-                            averageHeartRateBpm = pathData?.BattitiMedi.toString(),
-                            totalCaloriesKcal = pathData?.Calorie.toString()
+                            totalDurationMin = pathData?.Durata,
+                            averagePace = pathData?.PassoMedio,
+                            averageHeartRateBpm = pathData?.BattitiMedi,
+                            totalCaloriesKcal = pathData?.Calorie
                         )
                     }
                 }
@@ -512,21 +493,21 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 }
 
                 2 -> {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(1),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 80.dp),
-                        modifier = Modifier.padding(contentPadding)
-                    ) {
-                        items(paths) { path ->
-                            PathItem(
-                                item = path.second,
-                                fileName = path.third,
-                                onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
-                            )
-                        }
-                    }
+//                    LazyVerticalGrid(
+//                        columns = GridCells.Fixed(1),
+//                        verticalArrangement = Arrangement.spacedBy(8.dp),
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 80.dp),
+//                        modifier = Modifier.padding(contentPadding)
+//                    ) {
+//                        items(paths) { path ->
+//                            PathItem(
+//                                item = path.second,
+//                                fileName = path.third,
+//                                onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
+//                            )
+//                        }
+//                    }
                 }
             }
         }

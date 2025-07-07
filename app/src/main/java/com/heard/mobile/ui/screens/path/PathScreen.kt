@@ -111,7 +111,6 @@ fun PathScreen(navController: NavController) {
                         onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
                     )
                 }
-
             }
         }
     }
