@@ -1,5 +1,6 @@
 package com.heard.mobile.ui.screens.login
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -13,11 +14,15 @@ class AuthViewModel : ViewModel() {
     private val _isUserLoggedIn = MutableStateFlow(auth.currentUser != null)
     val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
 
+    private val _userEmail = MutableStateFlow(auth.currentUser?.email)
+    val userEmail: StateFlow<String?> = _userEmail
+
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _isUserLoggedIn.value = true
+                    _userEmail.value = auth.currentUser?.email
                     onResult(true, null)
                 } else {
                     onResult(false, task.exception?.localizedMessage)
@@ -28,5 +33,7 @@ class AuthViewModel : ViewModel() {
     fun logout() {
         auth.signOut()
         _isUserLoggedIn.value = false
+        _userEmail.value = null
     }
 }
+

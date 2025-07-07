@@ -33,6 +33,7 @@ sealed interface HeardRoute {
     @Serializable data object Login : HeardRoute
     @Serializable data object Register : HeardRoute
     @Serializable data object Group : HeardRoute
+
 }
 
 @Composable
