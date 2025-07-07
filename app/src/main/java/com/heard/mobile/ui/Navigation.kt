@@ -9,6 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.heard.mobile.ui.screens.addPath.AddPathScreen
+import com.heard.mobile.ui.screens.group.CompleteGroupScreen
+import com.heard.mobile.ui.screens.group.GroupScreen
 import com.heard.mobile.ui.screens.home.HomeScreen
 import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.ui.screens.login.LoginScreen
@@ -30,9 +32,7 @@ sealed interface HeardRoute {
     @Serializable data object Path : HeardRoute
     @Serializable data object Login : HeardRoute
     @Serializable data object Register : HeardRoute
-
-
-
+    @Serializable data object Group : HeardRoute
 }
 
 @Composable
@@ -83,6 +83,9 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
         }
         composable<HeardRoute.Path> {
             PathScreen(navController)
+        }
+        composable<HeardRoute.Group> {
+            CompleteGroupScreen(navController)
         }
     }
 }
