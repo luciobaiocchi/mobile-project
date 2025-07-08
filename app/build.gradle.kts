@@ -80,6 +80,8 @@ dependencies {
     implementation(libs.androidx.animation.core.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.benchmark.macro)
+    implementation(libs.androidx.foundation.layout.android)
     testImplementation(libs.junit)
     annotationProcessor(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.junit)
