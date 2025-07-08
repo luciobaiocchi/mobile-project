@@ -1,27 +1,34 @@
 package com.heard.mobile.ui.screens.pathDetail
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,9 +45,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.google.firebase.Timestamp
@@ -48,6 +57,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
+import com.heard.mobile.ui.screens.path.getAllPaths
+import com.heard.mobile.utils.rememberCameraLauncher
+import kotlinx.coroutines.CoroutineScope
 import com.heard.mobile.ui.screens.personal.components.CustomTabRow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -80,7 +92,6 @@ data class PathData(
 @Composable
 fun PathDetailScreen(navController: NavController, travelId: String) {
     val ctx = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
     val db = FirebaseFirestore.getInstance()
 
     // userProfileForCreator: I dati del profilo dell'utente che ha CREATO il percorso
@@ -105,6 +116,9 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var placeholderView: ImageView? by remember { mutableStateOf(null) }
 
     var paths by remember { mutableStateOf<List<Triple<String, String, String?>>>(emptyList()) }
+
+    var imageOption by remember { mutableStateOf("") };
+
 
     // Launcher per selezionare l'immagine
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -144,24 +158,51 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     }
 
 
+    val cameraLauncher = rememberCameraLauncher(
+        onPictureTaken = { uri ->
+            uri.let {
+                scope.launch {
+                    saveImageLocally(ctx, it, travelId, db) { success, newImageBitmap, fileName ->
+                        if (success && newImageBitmap != null) {
+                            imageBitmap = newImageBitmap
+                            // Aggiorna anche pathData con il nuovo nome file
+                            pathData = pathData?.copy(file = fileName)
+                            Toast.makeText(ctx, "Immagine caricata con successo!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(ctx, "Errore durante il caricamento dell'immagine", Toast.LENGTH_SHORT).show()
+                        }
+                        isUploadingImage = false
+                    }
+                }
+            }
+        })
+
+
 
     // Funzione per controllare i permessi e aprire la galleria
     fun openImagePicker() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            android.Manifest.permission.READ_MEDIA_IMAGES
+            Manifest.permission.READ_MEDIA_IMAGES
         } else {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE
         }
 
         when {
             ContextCompat.checkSelfPermission(ctx, permission) == PackageManager.PERMISSION_GRANTED -> {
                 // Permesso già concesso
                 isUploadingImage = true
-                imagePickerLauncher.launch("image/*")
+
+                if (imageOption == "Galleria"){
+                    imagePickerLauncher.launch("image/*")
+                } else if (imageOption == "Camera") {
+                    cameraLauncher.captureImage()
+                }
+
+
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                    (ctx as? androidx.activity.ComponentActivity)?.let { activity ->
-                        androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+                    (ctx as? ComponentActivity)?.let { activity ->
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
                     } == true -> {
                 // Mostra spiegazione del permesso
                 showRationaleDialog = true
@@ -186,9 +227,9 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     onClick = {
                         showRationaleDialog = false
                         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            android.Manifest.permission.READ_MEDIA_IMAGES
+                            Manifest.permission.READ_MEDIA_IMAGES
                         } else {
-                            android.Manifest.permission.READ_EXTERNAL_STORAGE
+                            Manifest.permission.READ_EXTERNAL_STORAGE
                         }
                         permissionLauncher.launch(permission)
                     }
@@ -218,14 +259,14 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         showPermissionDialog = false
                         // Apri le impostazioni dell'app
                         try {
-                            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", ctx.packageName, null)
                             }
                             ctx.startActivity(intent)
                         } catch (e: Exception) {
                             // Fallback: apri le impostazioni generali
                             try {
-                                val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                                val intent = Intent(Settings.ACTION_SETTINGS).apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                 }
                                 ctx.startActivity(intent)
@@ -321,7 +362,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
             userProfileCurrentViewer = currentUserDoc.toObject(UserProfile::class.java)
         }
 
-        paths = com.heard.mobile.ui.screens.path.getPathsName(db)
+        paths = getAllPaths(db)
 
         mapView?.let { map ->
             placeholderView?.let { image ->
@@ -330,7 +371,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         }
     }
 
-    val userFavorites = userProfileCurrentViewer?.preferiti ?: emptyList()
+    var userFavorites = userProfileCurrentViewer?.preferiti ?: emptyList()
 
     fun shareDetails() {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -394,36 +435,52 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     modifier = Modifier.fillMaxSize()
                 )
 
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp)
-                        .background(color = Color.Black.copy(alpha = 0.5f))
+                        .height(130.dp) // Aumentata
+                        .background(color = Color.Black.copy(alpha = 0.6f))
                         .align(Alignment.BottomStart)
-                        .padding(start = 6.dp, top = 16.dp, bottom = 16.dp)
+                        .padding(horizontal = 12.dp, vertical = 12.dp)
                 ) {
                     Column(
-                        modifier = Modifier.align(Alignment.TopStart)
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         Text(
                             text = pathData?.Nome ?: "Nome percorso",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
+                            fontSize = 24.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        val timestamp = pathData?.Data
-                        val date = timestamp?.toDate()
-                        val formattedDate = date?.let {
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)
-                        } ?: "Data non disponibile"
 
-                        Text(
-                            text = formattedDate,
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = { shareDetails() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Condividi")
+                            }
+
+                            FavoriteButton(
+                                db = db,
+                                travelId = travelId,
+                                userProfileCurrentViewer = userProfileCurrentViewer,
+                                scope = scope
+                            )
+
+                        }
                     }
                 }
+
+
             }
 
             var selectedTabIndex by remember { mutableStateOf(0) }
@@ -488,7 +545,10 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         isImageLoading = isImageLoading,
                         isUploadingImage = isUploadingImage,
                         onImageClick = { openImagePicker() },
-                        onRemoveImage = { showRemoveDialog = true }
+                        onRemoveImage = { showRemoveDialog = true },
+                        onImageOptionChange = {newValue  ->
+                            imageOption = newValue
+                        }
                     )
                 }
 
@@ -513,3 +573,36 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         }
     }
 }
+
+@Composable
+fun FavoriteButton(
+    db: FirebaseFirestore,
+    travelId: String,
+    userProfileCurrentViewer: UserProfile?,
+    scope: CoroutineScope
+) {
+    val travelRef = db.document("Percorsi/$travelId")
+
+    // Usiamo remember per mantenere uno stato locale reattivo
+    var userFavorites by remember { mutableStateOf(userProfileCurrentViewer?.preferiti ?: emptyList()) }
+
+    // Verifica se l'id è già nei preferiti
+    val isFavorite = userFavorites.any { it.path == travelRef.path }
+
+    Button(
+        onClick = {
+            scope.launch {
+                toggleFavorite(db, travelId, userFavorites) {
+                    userFavorites = it // aggiorna lo stato locale
+                }
+            }
+        },
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFavorite) Color.Red else Color.Gray
+        )
+    ) {
+        Text(if (isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti")
+    }
+}
+

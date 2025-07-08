@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,7 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageBox(
     imageBitmap: Bitmap?,
@@ -35,8 +38,54 @@ fun ImageBox(
     isUploadingImage: Boolean,
     onImageClick: () -> Unit,
     onRemoveImage: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onImageOptionSelected: (String) -> Unit
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    var showSheet by remember { mutableStateOf(false) }
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Scegli immagine", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ListItem(
+                    headlineContent = { Text("Scatta foto") },
+                    leadingContent = {
+                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showSheet = false
+                        onImageOptionSelected("Camera")
+                        onImageClick();
+                    }
+                )
+
+                ListItem(
+                    headlineContent = { Text("Galleria") },
+                    leadingContent = {
+                        Icon(Icons.Outlined.Image, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showSheet = false
+                        onImageOptionSelected("Galleria")
+                        onImageClick()
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -45,7 +94,9 @@ fun ImageBox(
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable {
                 if (imageBitmap == null && !isImageLoading && !isUploadingImage) {
-                    onImageClick()
+                    coroutineScope.launch {
+                        showSheet = true
+                    }
                 }
             },
         contentAlignment = Alignment.Center
@@ -116,8 +167,7 @@ fun ImageBox(
                         }
                     }
                 }
-            }
-            else -> {
+            } else -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -148,7 +198,8 @@ fun ExpandableTextWithImage(
     isImageLoading: Boolean,
     isUploadingImage: Boolean,
     onImageClick: () -> Unit,
-    onRemoveImage: () -> Unit
+    onRemoveImage: () -> Unit,
+    onImageOptionChange: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -191,7 +242,9 @@ fun ExpandableTextWithImage(
             isImageLoading = isImageLoading,
             isUploadingImage = isUploadingImage,
             onImageClick = onImageClick,
-            onRemoveImage = onRemoveImage
+            onRemoveImage = onRemoveImage,
+            onImageOptionSelected = onImageOptionChange
+
         )
     }
 }

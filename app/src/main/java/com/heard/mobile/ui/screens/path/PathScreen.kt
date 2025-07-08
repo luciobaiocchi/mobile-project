@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,11 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Menu
 
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,8 +33,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.EmptyPath
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,12 +50,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
@@ -66,19 +66,59 @@ fun PathScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     val db = FirebaseFirestore.getInstance()
 
+    var menuExpanded by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(Unit) {
-        paths = getPathsName(db)
+        paths = getAllPaths(db)
         isLoading = false
     }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                onClick = { navController.navigate(HeardRoute.AddTravel) }
-            ) {
-                Icon(Icons.Outlined.Add, "Add Travel")
+            Box {
+                FloatingActionButton(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    onClick = { menuExpanded = true }
+                ) {
+                    Icon(Icons.Outlined.Menu, contentDescription = "Apri menu")
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Aggiungi percorso") },
+                        onClick = {
+                            menuExpanded = false
+                            navController.navigate(HeardRoute.AddTravel)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Filtra preferiti") },
+                        onClick = {
+                            menuExpanded = false
+                            isLoading = true
+                            coroutineScope.launch {
+                                paths = getFavoritesPaths(db)
+                                isLoading = false
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Tutti i percorsi") },
+                        onClick = {
+                            menuExpanded = false
+                            isLoading = true
+                            coroutineScope.launch {
+                                paths = getAllPaths(db)
+                                isLoading = false
+                            }
+                        }
+                    )
+                }
             }
         },
         topBar = { AppBar(navController, title = "Percorsi") },
@@ -117,7 +157,7 @@ fun PathScreen(navController: NavController) {
 }
 
 
-suspend fun getPathsName(db: FirebaseFirestore): List<Triple<String, String, String?>> {
+suspend fun getAllPaths(db: FirebaseFirestore): List<Triple<String, String, String?>> {
     val paths = db.collection("Percorsi").get().await()
     return paths.documents.mapNotNull { doc ->
         val name = doc.getString("Nome")
@@ -127,6 +167,27 @@ suspend fun getPathsName(db: FirebaseFirestore): List<Triple<String, String, Str
     }
 }
 
+suspend fun getFavoritesPaths(
+    db: FirebaseFirestore,
+): List<Triple<String, String, String?>> {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return emptyList()
+    val userDoc = db.collection("Utenti").document(userId).get().await()
+    val favoriteRefs = userDoc["Preferiti"] as? List<DocumentReference> ?: return emptyList()
+
+    val favoritePaths = mutableListOf<Triple<String, String, String?>>()
+
+    for (ref in favoriteRefs) {
+        val doc = ref.get().await()
+        if (doc.exists()) {
+            val id = doc.id
+            val title = doc.getString("Nome") ?: "Senza titolo"
+            val img = doc.getString("file")
+            favoritePaths.add(Triple(id, title, img))
+        }
+    }
+
+    return favoritePaths
+}
 
 
 @Composable
