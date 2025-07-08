@@ -32,13 +32,16 @@ import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -61,6 +64,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
 import com.heard.mobile.ui.screens.pathDetail.ImageBox
 import com.heard.mobile.ui.screens.pathDetail.saveImageLocally
+import com.heard.mobile.utils.rememberCameraLauncher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.koin.androidx.compose.koinViewModel
@@ -179,7 +183,6 @@ fun AddPathScreen(
                 imageUri = imageUri,
                 onImagePicked = {
                     imageUri = it
-
                 },
                 modifier = Modifier
                     .padding(8.dp)
@@ -238,26 +241,81 @@ fun AddPathScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClickableImagePicker(
     modifier: Modifier = Modifier,
     imageUri: Uri?,
     onImagePicked: (Uri) -> Unit
 ) {
-    val launcher = rememberLauncherForActivityResult(
+    val launcher = rememberLauncherForActivityResult (
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { onImagePicked(it)  }
+        uri?.let {
+            onImagePicked(it)
+        }
+    }
+
+    val cameraLauncher = rememberCameraLauncher(
+        onPictureTaken = {
+            uri: Uri? ->
+            uri?.let {
+                onImagePicked(it)
+            }
+
+        })
+
+
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Scegli un'opzione", style = MaterialTheme.typography.titleMedium)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        showBottomSheet = false
+                        launcher.launch("image/*")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Scegli dalla galleria")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        showBottomSheet = false
+                        cameraLauncher.captureImage()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Scatta foto")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable { launcher.launch("image/*") }
+            .clickable { showBottomSheet = true }
             .background(Color.LightGray),
         contentAlignment = Alignment.Center
     ) {
-
         if (imageUri != null) {
             AsyncImage(
                 model = imageUri,

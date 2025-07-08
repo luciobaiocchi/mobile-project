@@ -177,8 +177,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         isUploadingImage = false
                     }
                 }
-            } ?: run {
-                isUploadingImage = false
             }
         })
 

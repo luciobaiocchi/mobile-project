@@ -78,7 +78,7 @@ fun ImageBox(
                     modifier = Modifier.clickable {
                         showSheet = false
                         onImageOptionSelected("Galleria")
-                        onImageClick();
+                        onImageClick()
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
