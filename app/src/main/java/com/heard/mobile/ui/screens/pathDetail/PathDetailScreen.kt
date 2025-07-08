@@ -58,9 +58,9 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
 import com.heard.mobile.ui.screens.path.getAllPaths
-import com.heard.mobile.ui.screens.personal.CustomTabRow
 import com.heard.mobile.utils.rememberCameraLauncher
 import kotlinx.coroutines.CoroutineScope
+import com.heard.mobile.ui.screens.personal.components.CustomTabRow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.osmdroid.config.Configuration

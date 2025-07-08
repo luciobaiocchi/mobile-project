@@ -13,10 +13,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.heard.mobile.datastore.ThemeOption
+import com.heard.mobile.viewmodel.ThemeViewModel
 import com.heard.mobile.ui.ApplicationGraph
 import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.ui.theme.MobileTheme
-import com.heard.mobile.viewmodel.ThemeViewModel
+import com.heard.mobile.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -45,8 +46,10 @@ class MainActivity : ComponentActivity() {
                 ThemeOption.SYSTEM -> isSystemInDarkTheme()
             }
 
-            MobileTheme(useDarkTheme = darkTheme) {
+            MobileTheme(useDarkTheme = darkTheme, dynamicColor = false) {
                 val navController = rememberNavController()
+
+
                 ApplicationGraph(navController, themeViewModel, authViewModel)
             }
         }

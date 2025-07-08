@@ -6,7 +6,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-enum class ThemeOption { LIGHT, DARK, SYSTEM }
+enum class ThemeOption(val label: String) {
+    LIGHT("Chiaro"),
+    DARK("Scuro"),
+    SYSTEM("Sistema")
+}
 
 private val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
@@ -24,7 +28,7 @@ class ThemePreferenceDataStore(private val context: Context) {
         }
     }
 
-    suspend fun setTheme(option: com.heard.mobile.ui.screens.settings.ThemeOption) {
+    suspend fun setTheme(option: ThemeOption) {
         context.dataStore.edit { prefs ->
             prefs[THEME_KEY] = option.name
         }

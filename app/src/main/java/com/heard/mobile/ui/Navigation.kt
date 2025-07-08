@@ -3,11 +3,14 @@ package com.heard.mobile.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.heard.mobile.ui.screens.addPath.AddPathScreen
+import com.heard.mobile.ui.screens.group.CompleteGroupScreen
+import com.heard.mobile.ui.screens.group.GroupScreen
 import com.heard.mobile.ui.screens.home.HomeScreen
 import com.heard.mobile.ui.screens.login.AuthViewModel
 import com.heard.mobile.ui.screens.login.LoginScreen
@@ -16,6 +19,7 @@ import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
 import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
 import com.heard.mobile.ui.screens.register.RegisterScreen
+import com.heard.mobile.viewmodel.SettingsViewModel
 import com.heard.mobile.viewmodel.ThemeViewModel
 import kotlinx.serialization.Serializable
 
@@ -28,13 +32,14 @@ sealed interface HeardRoute {
     @Serializable data object Path : HeardRoute
     @Serializable data object Login : HeardRoute
     @Serializable data object Register : HeardRoute
+    @Serializable data object Group : HeardRoute
 
 }
 
 @Composable
 fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeViewModel, authViewModel: AuthViewModel) {
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
-    val userEmail by authViewModel.userEmail.collectAsState()
+    val settingsViewModel: SettingsViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -43,11 +48,9 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
         composable<HeardRoute.Login> {
 
             LoginScreen(
-                navController = navController,            // <-- passaggio navController
+                navController = navController,
                 onLoginSuccess = {
-                    // naviga alla home dopo il login
                     navController.navigate(HeardRoute.Home) {
-                        // evita di poter tornare indietro alla login
                         popUpTo(HeardRoute.Login) { inclusive = true }
                     }
                 }
@@ -57,7 +60,6 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
-                    // Dopo registrazione vai alla home e resetta stack
                     navController.navigate(HeardRoute.Home) {
                         popUpTo(HeardRoute.Register) { inclusive = true }
                     }
@@ -75,13 +77,16 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             AddPathScreen(navController)
         }
         composable<HeardRoute.Settings> {
-            SettingsScreen(navController, themeViewModel, authViewModel)
+            SettingsScreen(navController, themeViewModel, authViewModel, settingsViewModel)
         }
         composable<HeardRoute.Profile> {
             PersonalProfile(navController)
         }
         composable<HeardRoute.Path> {
             PathScreen(navController)
+        }
+        composable<HeardRoute.Group> {
+            GroupScreen(navController)
         }
     }
 }

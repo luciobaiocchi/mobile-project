@@ -17,7 +17,7 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     val theme: StateFlow<ThemeOption> = themeStore.themeFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeOption.SYSTEM)
 
-    fun setTheme(option: com.heard.mobile.ui.screens.settings.ThemeOption) {
+    fun setTheme(option: ThemeOption) {
         viewModelScope.launch {
             themeStore.setTheme(option)
         }
