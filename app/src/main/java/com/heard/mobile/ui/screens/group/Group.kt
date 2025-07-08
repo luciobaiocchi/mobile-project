@@ -1,30 +1,6 @@
 package com.heard.mobile.ui.screens.group
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.heard.mobile.R
-import com.heard.mobile.ui.composables.AppBar
-import com.heard.mobile.ui.composables.CustomBottomBar
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 
 // Data classes
 
@@ -36,7 +12,7 @@ val mockCurrentUser = User(
     avatar = R.drawable.ic_launcher_foreground
 )
 
-val mockUserGroup = Group(
+val mockUserGroupPlaceHolder = GroupPlaceHolder(
     id = "group_1",
     name = "Gruppo1",
     description = "Gruppo per attività sportive e benessere",

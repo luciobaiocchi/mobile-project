@@ -19,6 +19,8 @@ import com.heard.mobile.ui.screens.personal.PersonalProfile
 import com.heard.mobile.ui.screens.settings.SettingsScreen
 import com.heard.mobile.ui.screens.pathDetail.PathDetailScreen
 import com.heard.mobile.ui.screens.register.RegisterScreen
+import com.heard.mobile.ui.screens.settings.PrivacyScreen
+import com.heard.mobile.ui.screens.settings.SupportScreen
 import com.heard.mobile.viewmodel.SettingsViewModel
 import com.heard.mobile.viewmodel.ThemeViewModel
 import kotlinx.serialization.Serializable
@@ -33,6 +35,9 @@ sealed interface HeardRoute {
     @Serializable data object Login : HeardRoute
     @Serializable data object Register : HeardRoute
     @Serializable data object Group : HeardRoute
+    @Serializable data object Privacy : HeardRoute
+    @Serializable data object Support : HeardRoute
+
 
 }
 
@@ -86,7 +91,13 @@ fun ApplicationGraph(navController: NavHostController, themeViewModel: ThemeView
             PathScreen(navController)
         }
         composable<HeardRoute.Group> {
-            GroupScreen(navController)
+            GroupScreen("tQeHQKlUHfiAzGCFxKBD",navController)
+        }
+        composable<HeardRoute.Privacy> {
+            PrivacyScreen(navController)
+        }
+        composable<HeardRoute.Support> {
+            SupportScreen(navController)
         }
     }
 }

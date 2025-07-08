@@ -52,9 +52,9 @@ fun CompleteGroupScreen(
                     )
                 }
 
-                uiState.userGroup != null -> {
+                uiState.userGroupPlaceHolder != null -> {
                     CompleteUserGroupContent(
-                        group = uiState.userGroup!!,
+                        groupPlaceHolder = uiState.userGroupPlaceHolder!!,
                         onLeaveGroup = { viewModel.leaveGroup() },
                         modifier = Modifier.padding(16.dp)
                     )
@@ -74,7 +74,7 @@ fun CompleteGroupScreen(
 
 @Composable
 fun CompleteUserGroupContent(
-    group: Group,
+    groupPlaceHolder: GroupPlaceHolder,
     onLeaveGroup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -85,14 +85,14 @@ fun CompleteUserGroupContent(
         // Sezione principale del gruppo
         item {
             UserGroupSection(
-                group = group,
+                groupPlaceHolder = groupPlaceHolder,
                 onLeaveGroup = onLeaveGroup
             )
         }
 
         // Statistiche del gruppo
         item {
-            GroupStatsSection(group = group)
+            GroupStatsSection(groupPlaceHolder = groupPlaceHolder)
         }
 
         // Attività recenti
@@ -292,7 +292,7 @@ val mockGroupNotifications = listOf(
     )
 )
 
-data class Group(
+data class GroupPlaceHolder(
     val id: String,
     val name: String,
     val description: String,

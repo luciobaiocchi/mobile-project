@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun GroupStatsSection(
-    group: Group,
+    groupPlaceHolder: GroupPlaceHolder,
     modifier: Modifier = Modifier
 ) {
     Card(

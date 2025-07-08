@@ -40,6 +40,9 @@ fun SettingsScreen(
     val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
     val locationEnabled by settingsViewModel.locationEnabled.collectAsState()
 
+    // Stato per tracciare quale permesso è stato richiesto
+    var pendingPermissionRequest by remember { mutableStateOf<String?>(null) }
+
     val permissions = buildList {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
@@ -51,22 +54,31 @@ fun SettingsScreen(
     val permissionHandler = rememberMultiplePermissions(
         permissions = permissions,
         onResult = { results ->
-            val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                results[Manifest.permission.POST_NOTIFICATIONS]?.isGranted == true
-            } else {
-                true // Pre-Android 13 non richiede permesso runtime per notifiche
+            // Aggiorna le preferenze solo in base al permesso che è stato effettivamente richiesto
+            when (pendingPermissionRequest) {
+                "notifications" -> {
+                    val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        results[Manifest.permission.POST_NOTIFICATIONS]?.isGranted == true
+                    } else {
+                        true
+                    }
+
+                    if (hasNotificationPermission) {
+                        settingsViewModel.setNotificationsEnabled(true)
+                    }
+                }
+                "location" -> {
+                    val hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
+                            results[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
+
+                    if (hasLocationPermission) {
+                        settingsViewModel.setLocationEnabled(true)
+                    }
+                }
             }
 
-            val hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
-                    results[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
-
-            // Aggiorna le preferenze solo se i permessi sono stati concessi
-            if (hasNotificationPermission && !notificationsEnabled) {
-                settingsViewModel.setNotificationsEnabled(true)
-            }
-            if (hasLocationPermission && !locationEnabled) {
-                settingsViewModel.setLocationEnabled(true)
-            }
+            // Reset del pending request
+            pendingPermissionRequest = null
         }
     )
 
@@ -91,7 +103,10 @@ fun SettingsScreen(
                     locationEnabled = locationEnabled,
                     permissionHandler = permissionHandler,
                     authViewModel = authViewModel,
-                    navController = navController
+                    navController = navController,
+                    onPermissionRequest = { requestType ->
+                        pendingPermissionRequest = requestType
+                    }
                 )
             }
 
@@ -111,7 +126,8 @@ private fun AccountSettingsCard(
     locationEnabled: Boolean,
     permissionHandler: com.heard.mobile.utils.MultiplePermissionHandler,
     authViewModel: AuthViewModel,
-    navController: NavController
+    navController: NavController,
+    onPermissionRequest: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -144,6 +160,7 @@ private fun AccountSettingsCard(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val notificationPermission = permissionHandler.statuses[Manifest.permission.POST_NOTIFICATIONS]
                             if (notificationPermission?.isGranted != true) {
+                                onPermissionRequest("notifications")
                                 permissionHandler.launchPermissionRequest()
                             } else {
                                 settingsViewModel.setNotificationsEnabled(true)
@@ -171,6 +188,7 @@ private fun AccountSettingsCard(
                                 permissionHandler.statuses[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
 
                         if (!hasLocationPermission) {
+                            onPermissionRequest("location")
                             permissionHandler.launchPermissionRequest()
                         } else {
                             settingsViewModel.setLocationEnabled(true)
@@ -186,14 +204,20 @@ private fun AccountSettingsCard(
                 icon = Icons.Default.Security,
                 title = "Privacy",
                 subtitle = "Gestisci le tue impostazioni privacy",
-                onClick = {}
+                onClick = {
+                    // Naviga alla schermata privacy
+                    navController.navigate(HeardRoute.Privacy)
+                }
             )
 
             SettingItem(
                 icon = Icons.Default.Help,
                 title = "Aiuto e Supporto",
                 subtitle = "FAQ e contatta il supporto",
-                onClick = {}
+                onClick = {
+                    // Naviga alla schermata di supporto
+                    navController.navigate(HeardRoute.Support)
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))

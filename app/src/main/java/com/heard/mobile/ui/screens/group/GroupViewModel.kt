@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 data class GroupUiState(
     val isLoading: Boolean = false,
-    val userGroup: Group? = null,
+    val userGroupPlaceHolder: GroupPlaceHolder? = null,
     val availableGroups: List<AvailableGroup> = emptyList(),
     val error: String? = null
 )
@@ -40,7 +40,7 @@ class GroupViewModel : ViewModel() {
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    userGroup = userGroup,
+                    userGroupPlaceHolder = userGroup,
                     availableGroups = availableGroups,
                     error = null
                 )
@@ -62,7 +62,7 @@ class GroupViewModel : ViewModel() {
                 val availableGroup = _uiState.value.availableGroups.find { it.id == groupId }
 
                 if (availableGroup != null) {
-                    val newGroup = Group(
+                    val newGroupPlaceHolder = GroupPlaceHolder(
                         id = availableGroup.id,
                         name = availableGroup.name,
                         description = availableGroup.description,
@@ -89,7 +89,7 @@ class GroupViewModel : ViewModel() {
 
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        userGroup = newGroup,
+                        userGroupPlaceHolder = newGroupPlaceHolder,
                         availableGroups = emptyList(),
                         error = null
                     )
@@ -113,7 +113,7 @@ class GroupViewModel : ViewModel() {
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    userGroup = null,
+                    userGroupPlaceHolder = null,
                     availableGroups = availableGroups,
                     error = null
                 )
@@ -132,10 +132,10 @@ class GroupViewModel : ViewModel() {
 
     // Metodi di simulazione - in un'app reale sarebbero sostituiti da chiamate al repository
 
-    private suspend fun getUserGroup(): Group? {
+    private suspend fun getUserGroup(): GroupPlaceHolder? {
         // Simula una chiamata API
         // Restituisce null se l'utente non è in nessun gruppo
-        return mockUserGroup // Cambia a null per simulare utente senza gruppo
+        return mockUserGroupPlaceHolder // Cambia a null per simulare utente senza gruppo
     }
 
     private suspend fun getAvailableGroups(): List<AvailableGroup> {
@@ -146,28 +146,28 @@ class GroupViewModel : ViewModel() {
 
 // Repository interface per future implementazioni
 interface GroupRepository {
-    suspend fun getUserGroup(userId: String): Group?
+    suspend fun getUserGroup(userId: String): GroupPlaceHolder?
     suspend fun getAvailableGroups(): List<AvailableGroup>
-    suspend fun joinGroup(userId: String, groupId: String): Result<Group>
+    suspend fun joinGroup(userId: String, groupId: String): Result<GroupPlaceHolder>
     suspend fun leaveGroup(userId: String, groupId: String): Result<Unit>
     suspend fun getGroupMembers(groupId: String): List<User>
 }
 
 // Implementazione mock del repository
 class MockGroupRepository : GroupRepository {
-    override suspend fun getUserGroup(userId: String): Group? {
-        return mockUserGroup
+    override suspend fun getUserGroup(userId: String): GroupPlaceHolder? {
+        return mockUserGroupPlaceHolder
     }
 
     override suspend fun getAvailableGroups(): List<AvailableGroup> {
         return mockAvailableGroups
     }
 
-    override suspend fun joinGroup(userId: String, groupId: String): Result<Group> {
+    override suspend fun joinGroup(userId: String, groupId: String): Result<GroupPlaceHolder> {
         val availableGroup = mockAvailableGroups.find { it.id == groupId }
 
         return if (availableGroup != null) {
-            val newGroup = Group(
+            val newGroupPlaceHolder = GroupPlaceHolder(
                 id = availableGroup.id,
                 name = availableGroup.name,
                 description = availableGroup.description,
@@ -191,7 +191,7 @@ class MockGroupRepository : GroupRepository {
                     )
                 )
             )
-            Result.success(newGroup)
+            Result.success(newGroupPlaceHolder)
         } else {
             Result.failure(Exception("Gruppo non trovato"))
         }
@@ -202,6 +202,6 @@ class MockGroupRepository : GroupRepository {
     }
 
     override suspend fun getGroupMembers(groupId: String): List<User> {
-        return mockUserGroup?.members ?: emptyList()
+        return mockUserGroupPlaceHolder?.members ?: emptyList()
     }
 }

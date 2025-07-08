@@ -18,12 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.heard.mobile.ui.screens.group.AvailableGroup
-import com.heard.mobile.ui.screens.group.Group
+import com.heard.mobile.ui.screens.group.GroupPlaceHolder
 import com.heard.mobile.ui.screens.group.User
 
 @Composable
 fun UserGroupSection(
-    group: Group,
+    groupPlaceHolder: GroupPlaceHolder,
     onLeaveGroup: () -> Unit
 ) {
     Card(
@@ -44,13 +44,13 @@ fun UserGroupSection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = group.name,
+                        text = groupPlaceHolder.name,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = group.description,
+                        text = groupPlaceHolder.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                         maxLines = 2,
@@ -77,8 +77,8 @@ fun UserGroupSection(
 
             // Informazioni del gruppo
             GroupInfoRow(
-                memberCount = group.memberCount,
-                maxMembers = group.maxMembers
+                memberCount = groupPlaceHolder.memberCount,
+                maxMembers = groupPlaceHolder.maxMembers
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -93,7 +93,7 @@ fun UserGroupSection(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            group.members.forEach { member ->
+            groupPlaceHolder.members.forEach { member ->
                 MemberListItem(member = member)
                 Spacer(modifier = Modifier.height(4.dp))
             }

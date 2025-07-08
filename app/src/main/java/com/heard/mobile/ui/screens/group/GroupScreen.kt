@@ -1,12 +1,23 @@
 package com.heard.mobile.ui.screens.group
 
+import android.graphics.Color
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -19,97 +30,343 @@ import com.heard.mobile.ui.screens.group.components.UserGroupSection
 import kotlinx.coroutines.tasks.await
 
 
+data class Group(
+    val Nome: String = "",
+    val Componenti: List<String> = emptyList(),
+    val CapoGruppo: String = ""
+)
+
+
 @Composable
-fun GroupScreen(
-    navController: NavController
-) {
-    var isLoading by remember { mutableStateOf(true) }
-    var userGroup by remember { mutableStateOf<Group?>(null) }
-    var availableGroups by remember { mutableStateOf<List<AvailableGroup>>(emptyList()) }
+fun GroupScreen(groupId: String, navController: NavController) {
+    val db = FirebaseFirestore.getInstance()
+    var group by remember { mutableStateOf<Group?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
-    var userPath: String? = null;
-    LaunchedEffect(Unit) {
-        try {
-            val firestore = FirebaseFirestore.getInstance()
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
-            userPath = "/Utenti/$uid"
+    var loading by remember { mutableStateOf(true) }
 
-            if (uid != null) {
-                // Query: cerco nella collezione "Gruppi" dove "componenti" contiene l'uid, limito a 1
-                val querySnapshot = firestore.collection("Gruppi")
-                    .whereArrayContains("Componenti", userPath)
-                    .limit(1)
-                    .get()
-                    .await()
+    fun loadGroup() {
+        loading = true
+        error = null
+        db.collection("Gruppi").document(groupId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    try {
+                        val nome = document.getString("Nome") ?: ""
+                        val componenti = document.get("Componenti") as? List<String> ?: emptyList()
+                        val capoGruppo = document.getString("Capo Gruppo") ?: ""
 
-                userGroup = if (!querySnapshot.isEmpty) {
-                    // Prendo il primo gruppo
-                    querySnapshot.documents[0].toObject(Group::class.java)
+                        group = Group(
+                            Nome = nome,
+                            Componenti = componenti,
+                            CapoGruppo = capoGruppo
+                        )
+                    } catch (e: Exception) {
+                        error = "Errore di parsing: ${e.localizedMessage}"
+                    }
                 } else {
-                    null
+                    error = "Documento non trovato"
                 }
+                loading = false
             }
+            .addOnFailureListener { e ->
+                error = "Errore di lettura: ${e.localizedMessage}"
+                loading = false
+            }
+    }
 
-            // Carica anche i gruppi disponibili come fai ora
-            val groupsSnapshot = firestore.collection("availableGroups").get().await()
-            availableGroups = groupsSnapshot.documents.mapNotNull { it.toObject(AvailableGroup::class.java) }
-
-        } catch (e: Exception) {
-            error = e.message
-        } finally {
-            isLoading = false
-        }
+    LaunchedEffect(groupId) {
+        loadGroup()
     }
 
     Scaffold(
         topBar = {
             AppBar(navController, title = "Gruppo")
         },
-        bottomBar = {
-            CustomBottomBar(navController, active = "Gruppo")
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+            when {
+                loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Caricamento gruppo...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+                error != null -> {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = error!!,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Button(onClick = {
+                            loadGroup()
+                        }) {
+                            Text("Riprova")
+                        }
+                    }
+                }
+                group != null -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Header del gruppo
+                        item {
+                            GroupHeader(group = group!!)
+                        }
+
+                        // Sezione Capo Gruppo
+                        item {
+                            LeaderSection(leader = group!!.CapoGruppo)
+                        }
+
+                        // Sezione Componenti
+                        item {
+                            MembersSection(members = group!!.Componenti)
+                        }
+                    }
+                }
+            }
         }
-    ) { contentPadding ->
+    }
+}
+
+@Composable
+fun GroupHeader(group: Group) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
         Box(
             modifier = Modifier
-                .padding(contentPadding)
-                .fillMaxSize()
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+                .padding(24.dp)
         ) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Icona del gruppo
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = "Gruppo",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
 
-                error != null -> {
-                    ErrorMessage(
-                        message = error ?: "Errore sconosciuto",
-                        onDismiss = { error = null },
-                        modifier = Modifier.align(Alignment.Center)
+                // Info del gruppo
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = group.Nome,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                }
 
-                userGroup != null -> {
-                    UserGroupContent(
-                        group = userGroup!!,
-                        onLeaveGroup = {
-                            // Qui puoi gestire la rimozione del gruppo (Firestore ecc.)
-                        },
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                else -> {
-                    AvailableGroupsContent(
-                        groups = availableGroups,
-                        onJoinGroup = { groupId ->
-                            // Qui puoi gestire l'iscrizione al gruppo (Firestore ecc.)
-                        },
-                        modifier = Modifier.padding(16.dp)
+                    Text(
+                        text = "${group.Componenti.size} ${if (group.Componenti.size == 1) "membro" else "membri"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LeaderSection(leader: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Capo Gruppo",
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Text(
+                    text = "Capo Gruppo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = leader.firstOrNull()?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                Text(
+                    text = leader,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MembersSection(members: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Componenti",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Text(
+                    text = "Componenti del Gruppo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Lista dei membri
+            members.forEach { member ->
+                MemberItem(member = member)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun MemberItem(member: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Avatar con iniziale
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = member.firstOrNull()?.uppercase() ?: "?",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
+        // Nome del membro
+        Text(
+            text = member,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -163,7 +420,7 @@ fun ErrorMessage(
 
 @Composable
 fun UserGroupContent(
-    group: Group,
+    groupPlaceHolder: GroupPlaceHolder,
     onLeaveGroup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -173,14 +430,13 @@ fun UserGroupContent(
     ) {
         item {
             UserGroupSection(
-                group = group,
+                groupPlaceHolder = groupPlaceHolder,
                 onLeaveGroup = onLeaveGroup
             )
         }
-
-        // Puoi aggiungere qui eventuali altri contenuti della sezione gruppo
     }
 }
+
 @Composable
 fun AvailableGroupsContent(
     groups: List<AvailableGroup>,
