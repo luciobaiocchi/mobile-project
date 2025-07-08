@@ -15,14 +15,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.benchmark.perfetto.Row
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,10 +57,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
-import com.heard.mobile.ui.screens.path.getPathsName
+import com.heard.mobile.ui.screens.path.getAllPaths
 import com.heard.mobile.ui.screens.personal.CustomTabRow
 import com.heard.mobile.utils.rememberCameraLauncher
-import com.heard.mobile.utils.saveImageToStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -365,7 +362,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
             userProfileCurrentViewer = currentUserDoc.toObject(UserProfile::class.java)
         }
 
-        paths = getPathsName(db)
+        paths = getAllPaths(db)
 
         mapView?.let { map ->
             placeholderView?.let { image ->
