@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.text.isDigitsOnly
 import coil.compose.AsyncImage
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
@@ -135,9 +136,12 @@ fun AddPathScreen(
             OutlinedTextField(
                 value = state.durata,
                 onValueChange = { newValue ->
-                    actions.setDurata(newValue)
+                    if(newValue.isDigitsOnly() || "." in newValue){
+                        actions.setDurata(newValue)
+                    }
                 },
                 label = { Text("Durata") },
+                trailingIcon = { Text("h") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -147,14 +151,18 @@ fun AddPathScreen(
                     actions.setCalorie(newValue)
                 },
                 label = { Text("Calorie") },
+                trailingIcon = { Text("kcal") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = state.lunghezza,
                 onValueChange = { newValue ->
-                    actions.setLunghezza(newValue)
+                    if(newValue.isDigitsOnly() || "." in newValue) {
+                        actions.setLunghezza(newValue)
+                    }
                 },
+                trailingIcon = { Text("Km") },
                 label = { Text("Lunghezza") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
@@ -162,8 +170,11 @@ fun AddPathScreen(
             OutlinedTextField(
                 value = state.battitiMedi,
                 onValueChange = { newValue ->
-                    actions.setBattitiMedi(newValue)
+                    if(newValue.isDigitsOnly() || "." in newValue) {
+                        actions.setBattitiMedi(newValue)
+                    }
                 },
+                trailingIcon = { Text("bpm") },
                 label = { Text("Battiti medi") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
@@ -171,8 +182,11 @@ fun AddPathScreen(
             OutlinedTextField(
                 value = state.passoMedio,
                 onValueChange = { newValue ->
-                    actions.setPassoMedio(newValue)
+                    if(newValue.isDigitsOnly() || "." in newValue){
+                        actions.setPassoMedio(newValue)
+                    }
                 },
+                trailingIcon = { Text("Km/h") },
                 label = { Text("Passo medio") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
