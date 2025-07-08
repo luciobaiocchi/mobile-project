@@ -61,6 +61,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
 import com.heard.mobile.ui.screens.path.getPathsName
 import com.heard.mobile.ui.screens.personal.CustomTabRow
+import com.heard.mobile.utils.rememberCameraLauncher
+import com.heard.mobile.utils.saveImageToStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -93,7 +95,6 @@ data class PathData(
 @Composable
 fun PathDetailScreen(navController: NavController, travelId: String) {
     val ctx = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
     val db = FirebaseFirestore.getInstance()
 
     // userProfileForCreator: I dati del profilo dell'utente che ha CREATO il percorso
@@ -118,6 +119,9 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var placeholderView: ImageView? by remember { mutableStateOf(null) }
 
     var paths by remember { mutableStateOf<List<Triple<String, String, String?>>>(emptyList()) }
+
+    var imageOption by remember { mutableStateOf("") };
+
 
     // Launcher per selezionare l'immagine
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -157,6 +161,28 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     }
 
 
+    val cameraLauncher = rememberCameraLauncher(
+        onPictureTaken = { uri ->
+            uri.let {
+                scope.launch {
+                    saveImageLocally(ctx, it, travelId, db) { success, newImageBitmap, fileName ->
+                        if (success && newImageBitmap != null) {
+                            imageBitmap = newImageBitmap
+                            // Aggiorna anche pathData con il nuovo nome file
+                            pathData = pathData?.copy(file = fileName)
+                            Toast.makeText(ctx, "Immagine caricata con successo!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(ctx, "Errore durante il caricamento dell'immagine", Toast.LENGTH_SHORT).show()
+                        }
+                        isUploadingImage = false
+                    }
+                }
+            } ?: run {
+                isUploadingImage = false
+            }
+        })
+
+
 
     // Funzione per controllare i permessi e aprire la galleria
     fun openImagePicker() {
@@ -170,7 +196,14 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
             ContextCompat.checkSelfPermission(ctx, permission) == PackageManager.PERMISSION_GRANTED -> {
                 // Permesso già concesso
                 isUploadingImage = true
-                imagePickerLauncher.launch("image/*")
+
+                if (imageOption == "Galleria"){
+                    imagePickerLauncher.launch("image/*")
+                } else if (imageOption == "Camera") {
+                    cameraLauncher.captureImage()
+                }
+
+
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                     (ctx as? ComponentActivity)?.let { activity ->
@@ -517,7 +550,10 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                         isImageLoading = isImageLoading,
                         isUploadingImage = isUploadingImage,
                         onImageClick = { openImagePicker() },
-                        onRemoveImage = { showRemoveDialog = true }
+                        onRemoveImage = { showRemoveDialog = true },
+                        onImageOptionChange = {newValue  ->
+                            imageOption = newValue
+                        }
                     )
                 }
 
