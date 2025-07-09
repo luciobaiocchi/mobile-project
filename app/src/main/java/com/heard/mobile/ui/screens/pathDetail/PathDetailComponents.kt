@@ -140,18 +140,6 @@ fun ImageBox(
                             .padding(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FloatingActionButton(
-                            onClick = onImageClick,
-                            modifier = Modifier.size(40.dp),
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ) {
-                            Icon(
-                                Icons.Outlined.CameraAlt,
-                                contentDescription = "Cambia immagine",
-                                modifier = Modifier.size(20.dp),
-                                tint = Color.White
-                            )
-                        }
 
                         FloatingActionButton(
                             onClick = onRemoveImage,
