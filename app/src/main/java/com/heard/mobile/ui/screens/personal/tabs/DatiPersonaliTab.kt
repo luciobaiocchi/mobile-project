@@ -27,7 +27,12 @@ data class UserData(
     val cognome: String = "",
     val telefono: String = "",
     val dataNascita: String = "",
-    val cittaNascita: String = ""
+    val cittaNascita: String = "",
+    val viaggi: String = "",
+    val km: String = "",
+    val foto: String = "",
+    val tempoViaggio: String = "",
+    val mediaKmGiorno: String = ""
 )
 
 @Composable

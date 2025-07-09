@@ -31,6 +31,23 @@ import androidx.compose.runtime.setValue
 
 @Composable
 fun ProfileHeader() {
+    var userData by remember { mutableStateOf<UserData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        loadUserDataFromFirestore(
+            onSuccess = { data ->
+                userData = data
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error
+                isLoading = false
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,12 +67,53 @@ fun ProfileHeader() {
         ) {
             ProfileImage()
             Spacer(modifier = Modifier.height(16.dp))
-            UserInfo()
-            Spacer(modifier = Modifier.height(16.dp))
-            QuickStatsRow()
+
+            when {
+                isLoading -> CircularProgressIndicator()
+                errorMessage != null -> Text(
+                    text = errorMessage ?: "Errore sconosciuto",
+                    color = MaterialTheme.colorScheme.error
+                )
+                else -> {
+                    userData?.let { user ->
+                        UserInfo(user)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        QuickStatsRow(user)
+                    }
+                }
+            }
         }
     }
 }
+
+@Composable
+private fun UserInfo(userData: UserData) {
+    Text(
+        text = "${userData.nome} ${userData.cognome}",
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+
+    Text(
+        text = userData.badge.ifEmpty { "Nessun badge" },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+    )
+}
+
+@Composable
+private fun QuickStatsRow(userData: UserData) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        QuickStatCard(userData.viaggi.ifEmpty { "0" }, "Viaggi")
+        QuickStatCard(userData.km.ifEmpty { "0" }, "Km")
+        QuickStatCard(userData.foto.ifEmpty { "0" }, "Foto")
+    }
+}
+
 
 @Composable
 private fun ProfileImage() {
@@ -85,49 +143,7 @@ private fun ProfileImage() {
     }
 }
 
-@Composable
-private fun UserInfo() {
-    var userData by remember { mutableStateOf<UserData?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        loadUserDataFromFirestore(
-            onSuccess = { data ->
-                userData = data
-                isLoading = false
-            },
-            onError = { error ->
-                errorMessage = error
-                isLoading = false
-            }
-        )
-    }
-
-    if (isLoading) {
-        CircularProgressIndicator()
-    } else if (errorMessage != null) {
-        Text(
-            text = errorMessage ?: "Errore sconosciuto",
-            color = MaterialTheme.colorScheme.error
-        )
-    } else {
-        userData?.let { user ->
-            Text(
-                text = "${user.nome} ${user.cognome}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                text = user.badge.ifEmpty { "Nessun badge" },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-        }
-    }
-}
 
 // Funzione per caricare i dati da Firestore
 private fun loadUserDataFromFirestore(
@@ -153,6 +169,9 @@ private fun loadUserDataFromFirestore(
                         nome = document.getString("Nome") ?: "",
                         cognome = document.getString("Cognome") ?: "",
                         badge = document.getString("Badge") ?: "",
+                        viaggi = document.getString("Viaggi") ?: "",
+                        km = document.getString("Km") ?: "",
+                        foto = document.getString("Foto") ?: ""
                     )
                     onSuccess(userData)
                 } catch (e: Exception) {
@@ -167,17 +186,6 @@ private fun loadUserDataFromFirestore(
         }
 }
 
-@Composable
-private fun QuickStatsRow() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        QuickStatCard("42", "Viaggi")
-        QuickStatCard("1.2K", "Km")
-        QuickStatCard("156", "Foto")
-    }
-}
 
 @Composable
 fun QuickStatCard(value: String, label: String) {
