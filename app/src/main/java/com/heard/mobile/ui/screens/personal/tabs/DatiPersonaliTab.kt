@@ -76,7 +76,7 @@ fun DatiPersonaliTab() {
         }
 
         item {
-            TravelPreferencesCard()
+            //TravelPreferencesCard()
         }
     }
 
@@ -310,7 +310,7 @@ private fun ErrorCard(errorMessage: String) {
     }
 }
 
-@Composable
+/*@Composable
 private fun TravelPreferencesCard() {
     Card(
         modifier = Modifier
@@ -356,4 +356,4 @@ private fun TravelPreferencesCard() {
             )
         }
     }
-}
+}*/

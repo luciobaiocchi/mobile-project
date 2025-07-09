@@ -108,7 +108,7 @@ private fun QuickStatsRow(userData: UserData) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        QuickStatCard(userData.viaggi.ifEmpty { "0" }, "Viaggi")
+        QuickStatCard(userData.viaggi.ifEmpty { "0" }, "Attività")
         QuickStatCard(userData.km.ifEmpty { "0" }, "Km")
         QuickStatCard(userData.foto.ifEmpty { "0" }, "Foto")
     }

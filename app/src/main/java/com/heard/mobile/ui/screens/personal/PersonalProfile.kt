@@ -22,7 +22,7 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalProfile(navController: NavController) {
-    val tabItems = listOf("Attività", "Statistiche", "Dati Personali")
+    val tabItems = listOf("Statistiche", "Dati Personali")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     // Stato per i dati utente
@@ -98,9 +98,9 @@ fun PersonalProfile(navController: NavController) {
 
                     else -> {
                         when (selectedTabIndex) {
-                            0 -> AttivitaTab(navController = navController)
-                            1 -> StatisticheTab()  // Passaggio dei dati caricati
-                            2 -> DatiPersonaliTab()
+                            //0 -> AttivitaTab(navController = navController)
+                            0 -> StatisticheTab()  // Passaggio dei dati caricati
+                            1 -> DatiPersonaliTab()
                         }
                     }
                 }
