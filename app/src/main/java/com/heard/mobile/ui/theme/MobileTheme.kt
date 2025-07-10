@@ -47,7 +47,7 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun MobileTheme(
-    useDarkTheme: Boolean = isSystemInDarkTheme(), // <-- nome coerente con MainActivity
+    useDarkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

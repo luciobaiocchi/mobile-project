@@ -2,14 +2,34 @@ package com.heard.mobile.ui.screens.group
 
 import com.heard.mobile.R
 
-// Data classes
 
 
-// Mock data
-val mockCurrentUser = User(
-    id = "current_user",
-    name = "Tu",
-    avatar = R.drawable.ic_launcher_foreground
+data class GroupPlaceHolder(
+    val id: String,
+    val name: String,
+    val description: String,
+    val memberCount: Int,
+    val maxMembers: Int,
+    val leader: User,
+    val members: List<User> = emptyList()
+)
+
+data class User(
+    val id: String,
+    val name: String,
+    val avatar: Int? = null,
+    val isLeader: Boolean = false
+)
+
+
+
+data class AvailableGroup(
+    val id: String,
+    val name: String,
+    val description: String,
+    val memberCount: Int,
+    val maxMembers: Int,
+    val category: String
 )
 
 val mockUserGroupPlaceHolder = GroupPlaceHolder(

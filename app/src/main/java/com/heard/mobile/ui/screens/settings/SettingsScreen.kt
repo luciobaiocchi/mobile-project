@@ -38,7 +38,6 @@ fun SettingsScreen(
     val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
     val locationEnabled by settingsViewModel.locationEnabled.collectAsState()
 
-    // Handler separati per diversi tipi di permessi
     val notificationPermissions = buildList {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
@@ -149,7 +148,6 @@ private fun AccountSettingsCard(
                 switchState = notificationsEnabled,
                 onSwitchChanged = { enabled ->
                     if (enabled) {
-                        // Se si vuole abilitare, controlla i permessi
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val notificationPermission = notificationPermissionHandler.statuses[Manifest.permission.POST_NOTIFICATIONS]
                             if (notificationPermission?.isGranted != true) {
@@ -161,7 +159,6 @@ private fun AccountSettingsCard(
                             settingsViewModel.setNotificationsEnabled(true)
                         }
                     } else {
-                        // Se si vuole disabilitare, aggiorna direttamente
                         settingsViewModel.setNotificationsEnabled(false)
                     }
                 }
@@ -175,7 +172,6 @@ private fun AccountSettingsCard(
                 switchState = locationEnabled,
                 onSwitchChanged = { enabled ->
                     if (enabled) {
-                        // Se si vuole abilitare, controlla i permessi
                         val hasLocationPermission = locationPermissionHandler.statuses[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
                                 locationPermissionHandler.statuses[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
 
@@ -185,7 +181,6 @@ private fun AccountSettingsCard(
                             settingsViewModel.setLocationEnabled(true)
                         }
                     } else {
-                        // Se si vuole disabilitare, aggiorna direttamente
                         settingsViewModel.setLocationEnabled(false)
                     }
                 }
@@ -196,7 +191,6 @@ private fun AccountSettingsCard(
                 title = "Privacy",
                 subtitle = "Gestisci le tue impostazioni privacy",
                 onClick = {
-                    // Naviga alla schermata privacy
                     navController.navigate(HeardRoute.Privacy)
                 }
             )
@@ -206,7 +200,6 @@ private fun AccountSettingsCard(
                 title = "Aiuto e Supporto",
                 subtitle = "FAQ e contatta il supporto",
                 onClick = {
-                    // Naviga alla schermata di supporto
                     navController.navigate(HeardRoute.Support)
                 }
             )

@@ -132,7 +132,7 @@ fun SectionWithCard(title: String, imageResList: List<Int>, navController: NavCo
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.width(4.dp)) // Piccolo spazio tra testo e freccia
+            Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 painter = painterResource(id = R.drawable.arrow_right_alt_24),
                 contentDescription = null,
@@ -154,7 +154,6 @@ fun SectionWithCard(title: String, imageResList: List<Int>, navController: NavCo
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // Immagini scrollabili
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
