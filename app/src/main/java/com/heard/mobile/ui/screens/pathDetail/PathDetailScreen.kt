@@ -86,7 +86,7 @@ data class PathData(
     val Calorie: String? = null,
     val Lunghezza: String? = null,
     val Creatore: DocumentReference? = null,
-    val file: String = "" // Campo per il nome del file immagine
+    val file: String = ""
 )
 
 @Composable
@@ -94,9 +94,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     val ctx = LocalContext.current
     val db = FirebaseFirestore.getInstance()
 
-    // userProfileForCreator: I dati del profilo dell'utente che ha CREATO il percorso
     var userProfileForCreator by remember { mutableStateOf<UserProfile?>(null) }
-    // userProfileCurrentViewer: I dati del profilo dell'utente LOGGATO che STA VISUALIZZANDO (per i preferiti)
     var userProfileCurrentViewer by remember { mutableStateOf<UserProfile?>(null) }
 
     var pathData by remember { mutableStateOf<PathData?>(null) }
@@ -104,7 +102,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var isImageLoading by remember { mutableStateOf(false) }
     var isUploadingImage by remember { mutableStateOf(false) }
 
-    // Nuove variabili per gestire i permessi
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showRationaleDialog by remember { mutableStateOf(false) }
 
@@ -120,7 +117,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
     var imageOption by remember { mutableStateOf("") };
 
 
-    // Launcher per selezionare l'immagine
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -129,7 +125,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 saveImageLocally(ctx, it, travelId, db) { success, newImageBitmap, fileName ->
                     if (success && newImageBitmap != null) {
                         imageBitmap = newImageBitmap
-                        // Aggiorna anche pathData con il nuovo nome file
                         pathData = pathData?.copy(file = fileName)
                         Toast.makeText(ctx, "Immagine caricata con successo!", Toast.LENGTH_SHORT).show()
                     } else {
@@ -143,16 +138,13 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         }
     }
 
-    // Launcher per i permessi migliorato
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permesso concesso - apri la galleria
             isUploadingImage = true
             imagePickerLauncher.launch("image/*")
         } else {
-            // Permesso negato - mostra dialog per le impostazioni
             showPermissionDialog = true
         }
     }
@@ -165,7 +157,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     saveImageLocally(ctx, it, travelId, db) { success, newImageBitmap, fileName ->
                         if (success && newImageBitmap != null) {
                             imageBitmap = newImageBitmap
-                            // Aggiorna anche pathData con il nuovo nome file
                             pathData = pathData?.copy(file = fileName)
                             Toast.makeText(ctx, "Immagine caricata con successo!", Toast.LENGTH_SHORT).show()
                         } else {
@@ -179,7 +170,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
 
 
 
-    // Funzione per controllare i permessi e aprire la galleria
     fun openImagePicker() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
@@ -204,17 +194,14 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     (ctx as? ComponentActivity)?.let { activity ->
                         ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
                     } == true -> {
-                // Mostra spiegazione del permesso
                 showRationaleDialog = true
             }
             else -> {
-                // Richiedi il permesso
                 permissionLauncher.launch(permission)
             }
         }
     }
 
-    // Dialog per spiegare il permesso
     if (showRationaleDialog) {
         AlertDialog(
             onDismissRequest = { showRationaleDialog = false },
@@ -245,7 +232,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         )
     }
 
-    // Dialog per indirizzare alle impostazioni
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
@@ -257,14 +243,12 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 TextButton(
                     onClick = {
                         showPermissionDialog = false
-                        // Apri le impostazioni dell'app
                         try {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", ctx.packageName, null)
                             }
                             ctx.startActivity(intent)
                         } catch (e: Exception) {
-                            // Fallback: apri le impostazioni generali
                             try {
                                 val intent = Intent(Settings.ACTION_SETTINGS).apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -298,7 +282,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 TextButton(
                     onClick = {
                         showRemoveDialog = false
-                        // Rimuovi l'immagine
                         pathData?.file?.let { filePath ->
                             if (filePath.isNotEmpty()) {
                                 scope.launch {
@@ -332,12 +315,10 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         Configuration.getInstance()
             .load(ctx, ctx.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
 
-        // 1. Recupera i dati specifici del percorso
         val pathDoc = db.collection("Percorsi").document(travelId).get().await()
         val fetchedPathData = pathDoc.toObject(PathData::class.java)
         pathData = fetchedPathData
 
-        // 2. Carica l'immagine dal campo "file" (path locale)
         fetchedPathData?.file?.let { filePath ->
             if (filePath.isNotEmpty()) {
                 isImageLoading = true
@@ -348,14 +329,12 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
             }
         }
 
-        // 3. Recupera i dati dell'utente CREATORE
         val creatorUid = fetchedPathData?.Creatore?.id
         if (creatorUid != null) {
             val creatorUserDoc = fetchedPathData.Creatore.get().await()
             userProfileForCreator = creatorUserDoc?.toObject(UserProfile::class.java)
         }
 
-        // 4. Recupera i dati dell'utente LOGGATO (per i preferiti, se necessario)
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
         if (currentUserUid != null) {
             val currentUserDoc = db.collection("Utenti").document(currentUserUid).get().await()
@@ -371,7 +350,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
         }
     }
 
-    var userFavorites = userProfileCurrentViewer?.preferiti ?: emptyList()
 
     fun shareDetails() {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -484,7 +462,7 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
             }
 
             var selectedTabIndex by remember { mutableStateOf(0) }
-            val tabItems = listOf("Panoramica", "Descrizione", "Percorsi simili")
+            val tabItems = listOf("Panoramica", "Descrizione")
 
             CustomTabRow(
                 selectedTabIndex = selectedTabIndex,
@@ -492,13 +470,11 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                 onTabSelected = { selectedTabIndex = it }
             )
 
-            // Contenuto basato sulla tab selezionata
             when (selectedTabIndex) {
-                0 -> { // Panoramica
+                0 -> {
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // User Info (Popolato con i dati dell'utente CREATORE del percorso)
                         val creatorUserName =
                             "${userProfileForCreator?.Nome ?: ""} ${userProfileForCreator?.Cognome ?: ""}".trim()
                         val activityTimestamp = pathData?.Data
@@ -519,7 +495,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Distanza (dal pathData)
                         Text(
                             text = "${pathData?.Lunghezza ?: "N/D"} km",
                             style = MaterialTheme.typography.displaySmall,
@@ -528,7 +503,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
 
-                        // Statistiche Attività (dal pathData)
                         ActivityStats(
                             totalDurationMin = pathData?.Durata,
                             averagePace = pathData?.PassoMedio,
@@ -552,23 +526,6 @@ fun PathDetailScreen(navController: NavController, travelId: String) {
                     )
                 }
 
-                2 -> {
-//                    LazyVerticalGrid(
-//                        columns = GridCells.Fixed(1),
-//                        verticalArrangement = Arrangement.spacedBy(8.dp),
-//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-//                        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 80.dp),
-//                        modifier = Modifier.padding(contentPadding)
-//                    ) {
-//                        items(paths) { path ->
-//                            PathItem(
-//                                item = path.second,
-//                                fileName = path.third,
-//                                onClick = { navController.navigate(HeardRoute.TravelDetails(path.first)) }
-//                            )
-//                        }
-//                    }
-                }
             }
         }
     }
@@ -583,10 +540,8 @@ fun FavoriteButton(
 ) {
     val travelRef = db.document("Percorsi/$travelId")
 
-    // Usiamo remember per mantenere uno stato locale reattivo
     var userFavorites by remember { mutableStateOf(userProfileCurrentViewer?.preferiti ?: emptyList()) }
 
-    // Verifica se l'id è già nei preferiti
     val isFavorite = userFavorites.any { it.path == travelRef.path }
 
     Button(
