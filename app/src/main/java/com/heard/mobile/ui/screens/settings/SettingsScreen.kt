@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -25,7 +24,6 @@ import com.heard.mobile.viewmodel.ThemeViewModel
 import com.heard.mobile.ui.screens.personal.components.SettingItem
 import com.heard.mobile.datastore.ThemeOption
 import com.heard.mobile.utils.rememberMultiplePermissions
-import com.heard.mobile.utils.PermissionStatus
 import com.heard.mobile.viewmodel.SettingsViewModel
 
 @Composable
@@ -40,45 +38,42 @@ fun SettingsScreen(
     val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
     val locationEnabled by settingsViewModel.locationEnabled.collectAsState()
 
-    // Stato per tracciare quale permesso è stato richiesto
-    var pendingPermissionRequest by remember { mutableStateOf<String?>(null) }
-
-    val permissions = buildList {
+    // Handler separati per diversi tipi di permessi
+    val notificationPermissions = buildList {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
         }
-        add(Manifest.permission.ACCESS_FINE_LOCATION)
-        add(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 
-    val permissionHandler = rememberMultiplePermissions(
-        permissions = permissions,
+    val locationPermissions = listOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    val notificationPermissionHandler = rememberMultiplePermissions(
+        permissions = notificationPermissions,
         onResult = { results ->
-            // Aggiorna le preferenze solo in base al permesso che è stato effettivamente richiesto
-            when (pendingPermissionRequest) {
-                "notifications" -> {
-                    val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        results[Manifest.permission.POST_NOTIFICATIONS]?.isGranted == true
-                    } else {
-                        true
-                    }
-
-                    if (hasNotificationPermission) {
-                        settingsViewModel.setNotificationsEnabled(true)
-                    }
-                }
-                "location" -> {
-                    val hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
-                            results[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
-
-                    if (hasLocationPermission) {
-                        settingsViewModel.setLocationEnabled(true)
-                    }
-                }
+            val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                results[Manifest.permission.POST_NOTIFICATIONS]?.isGranted == true
+            } else {
+                true
             }
 
-            // Reset del pending request
-            pendingPermissionRequest = null
+            if (hasNotificationPermission) {
+                settingsViewModel.setNotificationsEnabled(true)
+            }
+        }
+    )
+
+    val locationPermissionHandler = rememberMultiplePermissions(
+        permissions = locationPermissions,
+        onResult = { results ->
+            val hasLocationPermission = results[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
+                    results[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
+
+            if (hasLocationPermission) {
+                settingsViewModel.setLocationEnabled(true)
+            }
         }
     )
 
@@ -101,12 +96,10 @@ fun SettingsScreen(
                     currentTheme = theme,
                     notificationsEnabled = notificationsEnabled,
                     locationEnabled = locationEnabled,
-                    permissionHandler = permissionHandler,
+                    notificationPermissionHandler = notificationPermissionHandler,
+                    locationPermissionHandler = locationPermissionHandler,
                     authViewModel = authViewModel,
-                    navController = navController,
-                    onPermissionRequest = { requestType ->
-                        pendingPermissionRequest = requestType
-                    }
+                    navController = navController
                 )
             }
 
@@ -124,10 +117,10 @@ private fun AccountSettingsCard(
     currentTheme: ThemeOption,
     notificationsEnabled: Boolean,
     locationEnabled: Boolean,
-    permissionHandler: com.heard.mobile.utils.MultiplePermissionHandler,
+    notificationPermissionHandler: com.heard.mobile.utils.MultiplePermissionHandler,
+    locationPermissionHandler: com.heard.mobile.utils.MultiplePermissionHandler,
     authViewModel: AuthViewModel,
-    navController: NavController,
-    onPermissionRequest: (String) -> Unit
+    navController: NavController
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -158,10 +151,9 @@ private fun AccountSettingsCard(
                     if (enabled) {
                         // Se si vuole abilitare, controlla i permessi
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val notificationPermission = permissionHandler.statuses[Manifest.permission.POST_NOTIFICATIONS]
+                            val notificationPermission = notificationPermissionHandler.statuses[Manifest.permission.POST_NOTIFICATIONS]
                             if (notificationPermission?.isGranted != true) {
-                                onPermissionRequest("notifications")
-                                permissionHandler.launchPermissionRequest()
+                                notificationPermissionHandler.launchPermissionRequest()
                             } else {
                                 settingsViewModel.setNotificationsEnabled(true)
                             }
@@ -184,12 +176,11 @@ private fun AccountSettingsCard(
                 onSwitchChanged = { enabled ->
                     if (enabled) {
                         // Se si vuole abilitare, controlla i permessi
-                        val hasLocationPermission = permissionHandler.statuses[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
-                                permissionHandler.statuses[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
+                        val hasLocationPermission = locationPermissionHandler.statuses[Manifest.permission.ACCESS_FINE_LOCATION]?.isGranted == true ||
+                                locationPermissionHandler.statuses[Manifest.permission.ACCESS_COARSE_LOCATION]?.isGranted == true
 
                         if (!hasLocationPermission) {
-                            onPermissionRequest("location")
-                            permissionHandler.launchPermissionRequest()
+                            locationPermissionHandler.launchPermissionRequest()
                         } else {
                             settingsViewModel.setLocationEnabled(true)
                         }
