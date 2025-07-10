@@ -50,6 +50,8 @@ fun HomeScreen(navController: NavController) {
                 Text(text = "Gruppi", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
+                    colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
@@ -102,6 +104,7 @@ fun GroupCard(title: String, navController: NavController) {
         modifier = Modifier.clickable {
             navController.navigate(HeardRoute.Group)
         }
+
     ){
         Text(
             text = title,
@@ -141,6 +144,8 @@ fun SectionWithCard(title: String, imageResList: List<Int>, navController: NavCo
     Spacer(modifier = Modifier.height(8.dp))
 
     Card(
+        colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {

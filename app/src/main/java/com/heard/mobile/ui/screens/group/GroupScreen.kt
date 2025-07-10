@@ -1,6 +1,5 @@
 package com.heard.mobile.ui.screens.group
 
-import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,17 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
-import com.heard.mobile.ui.composables.CustomBottomBar
 import com.heard.mobile.ui.screens.group.components.AvailableGroupCard
 import com.heard.mobile.ui.screens.group.components.UserGroupSection
-import kotlinx.coroutines.tasks.await
 
 
 data class Group(
@@ -35,7 +30,6 @@ data class Group(
     val Componenti: List<String> = emptyList(),
     val CapoGruppo: String = ""
 )
-
 
 @Composable
 fun GroupScreen(groupId: String, navController: NavController) {
@@ -159,7 +153,7 @@ fun GroupHeader(group: Group) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -204,7 +198,7 @@ fun GroupHeader(group: Group) {
                         text = group.Nome,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -212,7 +206,7 @@ fun GroupHeader(group: Group) {
                     Text(
                         text = "${group.Componenti.size} ${if (group.Componenti.size == 1) "membro" else "membri"}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -226,7 +220,7 @@ fun LeaderSection(leader: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -240,7 +234,7 @@ fun LeaderSection(leader: String) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Capo Gruppo",
-                    tint = MaterialTheme.colorScheme.tertiary,
+                    tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -248,7 +242,7 @@ fun LeaderSection(leader: String) {
                     text = "Capo Gruppo",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -262,21 +256,21 @@ fun LeaderSection(leader: String) {
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = leader.firstOrNull()?.uppercase() ?: "?",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = MaterialTheme.colorScheme.onSecondary
                     )
                 }
 
                 Text(
                     text = leader,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -288,9 +282,7 @@ fun MembersSection(members: List<String>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -311,7 +303,7 @@ fun MembersSection(members: List<String>) {
                     text = "Componenti del Gruppo",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -332,7 +324,7 @@ fun MemberItem(member: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -342,21 +334,14 @@ fun MemberItem(member: String) {
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
-                        )
-                    )
-                ),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = member.firstOrNull()?.uppercase() ?: "?",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
+                color = MaterialTheme.colorScheme.onSecondary
             )
         }
 
@@ -364,8 +349,8 @@ fun MemberItem(member: String) {
         Text(
             text = member,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
