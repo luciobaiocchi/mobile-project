@@ -11,7 +11,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.heard.mobile.ui.screens.personal.tabs.UserData
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileDialog(
     currentData: UserData,

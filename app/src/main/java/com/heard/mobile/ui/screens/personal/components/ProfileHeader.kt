@@ -24,9 +24,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.R
 import com.heard.mobile.ui.screens.personal.tabs.UserData
-import java.text.SimpleDateFormat
-import java.util.Locale
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 @Composable
@@ -144,8 +141,6 @@ private fun ProfileImage() {
 }
 
 
-
-// Funzione per caricare i dati da Firestore
 private fun loadUserDataFromFirestore(
     onSuccess: (UserData) -> Unit,
     onError: (String) -> Unit

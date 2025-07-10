@@ -1,8 +1,6 @@
 package com.heard.mobile.ui.screens.personal
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,13 +11,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.composables.AppBar
 import com.heard.mobile.ui.screens.personal.components.ProfileHeader
 import com.heard.mobile.ui.screens.personal.components.CustomTabRow
-import com.heard.mobile.ui.screens.personal.tabs.AttivitaTab
 import com.heard.mobile.ui.screens.personal.tabs.StatisticheTab
 import com.heard.mobile.ui.screens.personal.tabs.DatiPersonaliTab
 import com.heard.mobile.ui.screens.personal.tabs.UserData
 import kotlinx.coroutines.tasks.await
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalProfile(navController: NavController) {
     val tabItems = listOf("Statistiche", "Dati Personali")

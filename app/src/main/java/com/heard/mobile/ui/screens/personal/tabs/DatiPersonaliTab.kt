@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.heard.mobile.ui.screens.personal.components.PersonalInfoItem
-import com.heard.mobile.ui.screens.personal.components.PreferenceItem
 import com.heard.mobile.ui.screens.personal.dialogs.EditProfileDialog
 import java.text.SimpleDateFormat
 import java.util.Locale

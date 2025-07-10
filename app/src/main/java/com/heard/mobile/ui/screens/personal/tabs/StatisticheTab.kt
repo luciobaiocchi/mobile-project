@@ -19,7 +19,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.heard.mobile.ui.screens.personal.components.StatCard
 import com.heard.mobile.ui.screens.personal.components.MyLineChart
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 

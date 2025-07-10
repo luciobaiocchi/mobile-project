@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.heard.mobile.ui.screens.addPath.AddPathScreen
-import com.heard.mobile.ui.screens.group.CompleteGroupScreen
 import com.heard.mobile.ui.screens.group.GroupScreen
 import com.heard.mobile.ui.screens.home.HomeScreen
 import com.heard.mobile.ui.screens.login.AuthViewModel
