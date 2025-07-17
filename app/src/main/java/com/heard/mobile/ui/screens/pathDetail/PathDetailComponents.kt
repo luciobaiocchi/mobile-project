@@ -289,7 +289,7 @@ fun UserInfo(
             .fillMaxWidth()
             .border(
                 width = 2.dp,
-                color = Color(0xFF3F51B5),
+                color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(25.dp)
             )
             .padding(12.dp)
@@ -348,7 +348,7 @@ fun ActivityStats(
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             if (averagePace != null) {
-                StatItem(label = "Passo medio", value = averagePace)
+                StatItem(label = "Passo medio", value = "$averagePace m/s")
             }
             Spacer(modifier = Modifier.height(16.dp))
             StatItem(label = "Calorie totali", value = "$totalCaloriesKcal kcal")
@@ -371,3 +371,4 @@ fun StatItem(label: String, value: String) {
         )
     }
 }
+
